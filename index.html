@@ -358,19 +358,9 @@ svg{display:block}
   #topbar{padding:8px 0}
 }
 /* ---------- 顶部工具栏（移动端折叠为单一入口） ---------- */
-#backup{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-#backup .use{flex:1 1 100%;order:99;text-align:right;margin-top:4px}
+#backup{display:flex;align-items:center;justify-content:flex-end;margin-bottom:6px}
+#backup .use{font-size:11.5px;color:var(--faint)}
 #backup #fileIn{display:none}
-@media(max-width:768px){
-  /* 移动端：4 个工具按钮隐藏（已搬到工具 sheet），useTip 文字保留显示 */
-  #backup .btn{display:none}
-  #backup .use{flex:1 1 auto;order:0;margin:0;text-align:right;font-size:11.5px;color:var(--faint)}
-  #backup.open{display:flex}
-  .tool-sheet{position:fixed;left:0;right:0;bottom:64px;z-index:58;background:var(--surface-1);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -8px 30px rgba(0,0,0,.18);animation:toastIn .28s var(--ease-spring) both}
-  .tool-sheet button{width:100%;min-height:46px;font-size:15px}
-  .tool-back{display:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,.35);z-index:57;animation:toastIn .22s var(--ease-spring) both}
-  .tool-handle{position:fixed;right:14px;bottom:140px;z-index:58;width:46px;height:46px;border-radius:50%;background:var(--brand);color:#fff;border:none;box-shadow:0 6px 20px rgba(249,115,22,.4);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
-}
 /* ---------- 任务条目（移动端更大点击区） ---------- */
 @media(max-width:768px){
   .ddl-row{padding:12px 10px;min-height:48px}
@@ -508,12 +498,8 @@ svg{display:block}
   <div id="pSleep" class="tb-panel hide"></div>
   <div id="pTime" class="tb-panel hide"></div>
 
-  <!-- ============ 数据备份（全局常驻） ============ -->
+  <!-- ============ 数据统计（全局常驻；工具按钮已整合进设置面板） ============ -->
   <div id="backup">
-    <button class="btn sm" onclick="exportJSON()">导出 JSON 备份</button>
-    <button class="btn sm ghost" onclick="fileIn.click()">导入恢复</button>
-    <button class="btn sm ghost" onclick="clearSeed()">清空示例数据</button>
-    <button class="btn sm dgr" onclick="wipeAll()">清空全部</button>
     <span class="use" id="useTip"></span>
     <input type="file" id="fileIn" accept="application/json,.json" class="hide" onchange="importJSON(this)">
   </div>
@@ -552,11 +538,6 @@ svg{display:block}
       <span>日记</span>
     </button>
   </nav>
-
-  <!-- ============ 移动端工具栏入口（浮动按钮 + 底部 sheet） ============ -->
-  <button class="tool-handle hide" id="toolHandle" onclick="toggleToolSheet()" aria-label="工具">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-  </button>
 
   <!-- ============ 概览：今天要处理 + 下一节课 + 今日课表 ============ -->
   <div class="tabpane" id="pane-overview">
@@ -2485,16 +2466,10 @@ const LLM_PRESETS = {
   siliconflow: { label:'硅基流动(推荐)',   baseURL:'https://api.siliconflow.cn/v1', model:'Pro/Qwen/Qwen2.5-7B-Instruct' }
 };
 let llmTabMode = 'custom';   // 'custom' | 'server'
-let llmDirect = false;       // false=本地桥 | true=网页直连
 window.openLlmSettings=()=>{
-  llmDirect = aiCfg().mode === 'direct';
-  // 先开面板（不阻塞），再异步拉当前值回填"当前值"提示
+  // 已移除本地桥，只走网页直连
   modal(`<h3>${ico('cloud',18)} 云端大模型设置<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
-    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:2px 0 8px">接入方式</div>
-    <div class="llm-tabs" style="margin:6px 0 12px">
-      <button class="btn sm llm-tab${!llmDirect?' on':''}" data-ai="bridge" onclick="switchDirect(false)">本地桥（电脑）</button>
-      <button class="btn sm llm-tab${llmDirect?' on':''}" data-ai="direct" onclick="switchDirect(true)">网页直连（手机/分享）</button>
-    </div>
+    <div class="hint" style="margin:2px 0 10px">网页直连模式：浏览器直接调用大模型 API（手机/分享均可用）。</div>
     <div class="llm-tabs">
       <button class="btn sm llm-tab${llmTabMode==='custom'?' on':''}" data-mode="custom" onclick="switchLlmTab('custom')">自定义</button>
       <button class="btn sm llm-tab${llmTabMode==='server'?' on':''}" data-mode="server" onclick="switchLlmTab('server')">服务端模型</button>
@@ -2525,42 +2500,12 @@ window.openLlmSettings=()=>{
   const cur = aiCfg();
   const fillFromLocal = () => {
     if (!document.getElementById('llmUrlCur')) return;
-    document.getElementById('llmUrlCur').textContent = cur.baseURL + (llmDirect ? '（网页直连）' : '（本地桥）');
+    document.getElementById('llmUrlCur').textContent = cur.baseURL + '（网页直连）';
     document.getElementById('llmModelCur').textContent = cur.model;
     document.getElementById('llmKeyCur').textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
   };
-  if (llmDirect) { fillFromLocal(); return; }
-  fetch(aiBase()+'/v1/settings', { signal: AbortSignal.timeout(3000) })
-    .then(r => r.ok ? r.json() : null).catch(() => null)
-    .then(c => {
-      // modal 已被关闭/重开的可能：检查节点是否还在 DOM
-      if (!document.getElementById('llmUrlCur')) return;
-      if (!c) {
-        document.getElementById('llmUrlCur').textContent = '连不上桥（确认 ai-bridge 已起）';
-        document.getElementById('llmModelCur').textContent = '连不上桥';
-        document.getElementById('llmKeyCur').textContent = '连不上桥';
-      } else {
-        document.getElementById('llmUrlCur').textContent = c.baseURL + (c.source ? `（${c.source==='custom'?'自定义配置':'服务端默认'}）` : '');
-        document.getElementById('llmModelCur').textContent = c.model;
-        document.getElementById('llmKeyCur').textContent = c.keySet ? '已配置（保存后可改）' : '未配置';
-      }
-    });
+  fillFromLocal();
 };
-function switchDirect(d){
-  llmDirect = !!d;
-  document.querySelectorAll('.llm-tabs [data-ai]').forEach(b => b.classList.toggle('on', (b.dataset.ai==='direct') === llmDirect));
-  const cur = aiCfg();
-  const curMode = llmDirect ? cur : (cur.mode==='direct' ? cur : null);
-  const u = document.getElementById('llmUrl'), m = document.getElementById('llmModel'), k = document.getElementById('llmKey');
-  if (llmDirect) {
-    // 网页直连：用 localStorage 里的值回填输入框
-    if (u) u.value = cur.baseURL; if (m) m.value = cur.model; if (k) k.value = cur.apiKey;
-    const ur = document.getElementById('llmUrlCur'), mr = document.getElementById('llmModelCur'), kr = document.getElementById('llmKeyCur');
-    if (ur) ur.textContent = cur.baseURL + '（网页直连）';
-    if (mr) mr.textContent = cur.model;
-    if (kr) kr.textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
-  }
-}
 function switchLlmTab(mode){
   llmTabMode = mode;
   document.querySelectorAll('.llm-tab[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
@@ -2581,33 +2526,17 @@ window.llmFetchModels=async ()=>{
   try {
     const url = document.getElementById('llmUrl').value.trim().replace(/\/+$/, '');
     const apiKey = document.getElementById('llmKey').value.trim();
-    if (llmDirect) {
-      // 网页直连：浏览器直接拉 DeepSeek /models
-      if (!apiKey) throw new Error('请先填 API Key');
-      const r = await fetch(url + '/models', { headers: { 'Authorization': 'Bearer ' + apiKey }, signal: AbortSignal.timeout(10000) });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json();
-      const ids = (j.data || []).map(x => x && x.id).filter(Boolean);
-      const sel = document.getElementById('llmModelsSel');
-      sel.innerHTML = ids.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
-      const wrap = document.getElementById('llmModelsWrap');
-      wrap.style.display = ids.length ? 'block' : 'none';
-      toast(ids.length ? '已加载 ' + ids.length + ' 个模型，下拉选一个' : '该 API 没返回模型列表（检查 baseURL 和 Key）', !ids.length);
-      return;
-    }
-    // 本地桥模式
-    const qs = new URLSearchParams();
-    if (url) qs.set('baseURL', url);
-    if (apiKey) qs.set('apiKey', apiKey);
-    const r = await fetch(aiBase() + '/v1/settings/models?' + qs.toString(), { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error((e.error && e.error.message) || ('HTTP '+r.status)); }
+    // 网页直连：浏览器直接拉 /models
+    if (!apiKey) throw new Error('请先填 API Key');
+    const r = await fetch(url + '/models', { headers: { 'Authorization': 'Bearer ' + apiKey }, signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
+    const ids = (j.data || []).map(x => x && x.id).filter(Boolean);
     const sel = document.getElementById('llmModelsSel');
-    sel.innerHTML = (j.models || []).map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+    sel.innerHTML = ids.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
     const wrap = document.getElementById('llmModelsWrap');
-    wrap.style.display = j.models && j.models.length ? 'block' : 'none';
-    if (!j.models || !j.models.length) toast('该 API 没返回模型列表（检查 baseURL 和 Key）', true);
-    else toast('已加载 ' + j.models.length + ' 个模型，下拉选一个');
+    wrap.style.display = ids.length ? 'block' : 'none';
+    toast(ids.length ? '已加载 ' + ids.length + ' 个模型，下拉选一个' : '该 API 没返回模型列表（检查 baseURL 和 Key）', !ids.length);
   } catch (e) {
     toast('拉取失败：' + e.message, true);
   } finally {
@@ -2624,32 +2553,15 @@ window.llmSave=async ()=>{
   }
   const btn = document.getElementById('llmSaveBtn'); btn.disabled = true; btn.textContent = '保存中…';
   try {
-    if (llmDirect) {
-      // 网页直连：写 localStorage（模式=direct），立即生效
-      aiSaveCfg({ mode:'direct', baseURL, model, apiKey, searchKey: aiCfg().searchKey });
-      const cur = aiCfg();
-      document.getElementById('llmResult').innerHTML =
-        `<span style="color:var(--ok)">✓ 已保存（网页直连） → ${esc(cur.baseURL)} · ${esc(cur.model)} · keySet=${cur.apiKey?'是':'否'}</span> · 对话立即生效`;
-      document.getElementById('llmUrlCur').textContent = cur.baseURL + '（网页直连）';
-      document.getElementById('llmModelCur').textContent = cur.model;
-      document.getElementById('llmKeyCur').textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
-      toast('网页直连配置已保存');
-      return;
-    }
-    // 本地桥模式
-    const r = await fetch(aiBase() + '/v1/settings/save', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, baseURL, model, apiKey }),
-      signal: AbortSignal.timeout(5000)
-    });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error((e.error && e.error.message) || ('HTTP '+r.status)); }
-    const j = await r.json();
+    // 网页直连：写 localStorage（模式=direct），立即生效
+    aiSaveCfg({ mode:'direct', baseURL, model, apiKey, searchKey: aiCfg().searchKey });
+    const cur = aiCfg();
     document.getElementById('llmResult').innerHTML =
-      `<span style="color:var(--ok)">✓ 已保存 → ${esc(j.mode==='custom'?'自定义':'服务端')} · ${esc(j.baseURL)} · ${esc(j.model)} · keySet=${j.keySet?'是':'否'}</span> · 下次对话即生效`;
-    document.getElementById('llmUrlCur').textContent = j.baseURL;
-    document.getElementById('llmModelCur').textContent = j.model;
-    document.getElementById('llmKeyCur').textContent = j.keySet ? '已配置（保存后可改）' : '未配置';
-    toast('设置已保存，热加载已生效');
+      `<span style="color:var(--ok)">✓ 已保存（网页直连） → ${esc(cur.baseURL)} · ${esc(cur.model)} · keySet=${cur.apiKey?'是':'否'}</span> · 对话立即生效`;
+    document.getElementById('llmUrlCur').textContent = cur.baseURL + '（网页直连）';
+    document.getElementById('llmModelCur').textContent = cur.model;
+    document.getElementById('llmKeyCur').textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
+    toast('网页直连配置已保存');
   } catch (e) {
     toast('保存失败：' + e.message, true);
   } finally {
@@ -2663,70 +2575,51 @@ window.llmTest=async ()=>{
     const baseURL = document.getElementById('llmUrl').value.trim().replace(/\/+$/, '');
     const model = document.getElementById('llmModel').value.trim();
     const apiKey = document.getElementById('llmKey').value.trim();
-    if (llmDirect) {
-      // 网页直连：浏览器直接双探针
-      if (!apiKey) throw new Error('请先填 API Key');
-      const res = { baseURL, model, models_ok:false, models_count:0, chat_ok:false, errors:{} };
-      try {
-        const r1 = await fetch(baseURL + '/models', { headers: { 'Authorization': 'Bearer ' + apiKey }, signal: AbortSignal.timeout(8000) });
-        if (r1.ok) {
-          const j1 = await r1.json();
-          res.models = (j1.data || []).map(x => x && x.id).filter(Boolean).slice(0, 50);
-          res.models_count = res.models.length; res.models_ok = true;
-        } else res.errors.models = 'HTTP ' + r1.status;
-      } catch (e) { res.errors.models = e && e.message || '网络错误'; }
-      try {
-        const r2 = await fetch(baseURL + '/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: '好' }], max_tokens: 5, temperature: 0 }),
-          signal: AbortSignal.timeout(10000)
-        });
-        if (r2.ok) {
-          const j2 = await r2.json();
-          res.chat_reply = j2 && j2.choices && j2.choices[0] && j2.choices[0].message && j2.choices[0].message.content;
-          res.chat_ok = true;
-        } else {
-          const t = await r2.text().catch(() => '');
-          res.errors.chat = 'HTTP ' + r2.status + '：' + t.slice(0, 150);
-        }
-      } catch (e) { res.errors.chat = e && e.message || '网络错误'; }
-      // 智能诊断：把 Failed to fetch 翻译成有用提示（CSP/预览沙箱/网络层拦截）
-      const diag = (m) => {
-        if (/Failed to fetch|NetworkError|TypeError/.test(String(m||''))) {
-          const loc = location && location.protocol;
-          if (loc === 'file:') return m + '（双击打开已放行跨域，若仍失败可能是浏览器插件/代理拦截）';
-          if (loc === 'http:' && location.hostname === '127.0.0.1') return m + '（检测到你在预览沙箱里测试：这个环境禁止直连 api.deepseek.com。请用浏览器打开公网链接 https://e97396ce128342ec84582201ab0f0939.sh5.agentos-app.net 测试，或双击本地 workbench.html）';
-          return m + '（浏览器拦截了跨域请求：请确认你在「公网链接」或「双击本地文件」打开，而不是预览沙箱）';
-        }
-        return m;
-      };
-      if (res.errors.models) res.errors.models = diag(res.errors.models);
-      if (res.errors.chat) res.errors.chat = diag(res.errors.chat);
-      const ok = res.models_ok && res.chat_ok;
-      const colors = res.errors && (res.errors.models || res.errors.chat) ? 'var(--danger)' : 'var(--ok)';
-      const lines = [];
-      lines.push(`<span style="color:${colors}">${ok?'✓ 双探针全通':'✗ 有失败'}</span>`);
-      lines.push(`模型列表：${res.models_ok?'✓ 拉到 '+res.models_count+' 个':(res.errors.models?'✗ '+res.errors.models:'✗ 未拉取')}${res.models && res.models.length ? '（示例：'+esc(res.models.slice(0,3).join(', '))+'）' : ''}`);
-      lines.push(`短对话：${res.chat_ok?'✓ 通了（回复：'+esc(res.chat_reply||'(空)')+'）':(res.errors.chat?'✗ '+res.errors.chat:'✗ 失败')}`);
-      document.getElementById('llmResult').innerHTML = lines.join('<br>');
-      toast(ok ? '双探针都通了，可以保存' : '有探针失败，看上面详情', !ok);
-      return;
-    }
-    // 本地桥模式
-    const r = await fetch(aiBase() + '/v1/settings/test', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseURL, model, apiKey }),
-      signal: AbortSignal.timeout(20000)
-    });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error((e.error && e.error.message) || ('HTTP '+r.status)); }
-    const j = await r.json();
-    const ok = j.all_ok;
-    const colors = j.errors && (j.errors.models || j.errors.chat) ? 'var(--danger)' : 'var(--ok)';
+    // 网页直连：浏览器直接双探针
+    if (!apiKey) throw new Error('请先填 API Key');
+    const res = { baseURL, model, models_ok:false, models_count:0, chat_ok:false, errors:{} };
+    try {
+      const r1 = await fetch(baseURL + '/models', { headers: { 'Authorization': 'Bearer ' + apiKey }, signal: AbortSignal.timeout(8000) });
+      if (r1.ok) {
+        const j1 = await r1.json();
+        res.models = (j1.data || []).map(x => x && x.id).filter(Boolean).slice(0, 50);
+        res.models_count = res.models.length; res.models_ok = true;
+      } else res.errors.models = 'HTTP ' + r1.status;
+    } catch (e) { res.errors.models = e && e.message || '网络错误'; }
+    try {
+      const r2 = await fetch(baseURL + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: '好' }], max_tokens: 5, temperature: 0 }),
+        signal: AbortSignal.timeout(10000)
+      });
+      if (r2.ok) {
+        const j2 = await r2.json();
+        res.chat_reply = j2 && j2.choices && j2.choices[0] && j2.choices[0].message && j2.choices[0].message.content;
+        res.chat_ok = true;
+      } else {
+        const t = await r2.text().catch(() => '');
+        res.errors.chat = 'HTTP ' + r2.status + '：' + t.slice(0, 150);
+      }
+    } catch (e) { res.errors.chat = e && e.message || '网络错误'; }
+    // 智能诊断：把 Failed to fetch 翻译成有用提示（CSP/预览沙箱/网络层拦截）
+    const diag = (m) => {
+      if (/Failed to fetch|NetworkError|TypeError/.test(String(m||''))) {
+        const loc = location && location.protocol;
+        if (loc === 'file:') return m + '（双击打开已放行跨域，若仍失败可能是浏览器插件/代理拦截）';
+        if (loc === 'http:' && location.hostname === '127.0.0.1') return m + '（检测到你在预览沙箱里测试：这个环境禁止直连 api.deepseek.com。请用浏览器打开公网链接 https://e97396ce128342ec84582201ab0f0939.sh5.agentos-app.net 测试，或双击本地 workbench.html）';
+        return m + '（浏览器拦截了跨域请求：请确认你在「公网链接」或「双击本地文件」打开，而不是预览沙箱）';
+      }
+      return m;
+    };
+    if (res.errors.models) res.errors.models = diag(res.errors.models);
+    if (res.errors.chat) res.errors.chat = diag(res.errors.chat);
+    const ok = res.models_ok && res.chat_ok;
+    const colors = res.errors && (res.errors.models || res.errors.chat) ? 'var(--danger)' : 'var(--ok)';
     const lines = [];
     lines.push(`<span style="color:${colors}">${ok?'✓ 双探针全通':'✗ 有失败'}</span>`);
-    lines.push(`模型列表：${j.models_ok?'✓ 拉到 '+j.models_count+' 个':(j.errors && j.errors.models) ? '✗ ' + j.errors.models : '✗ 未拉取'}${j.models && j.models.length ? '（示例：'+esc(j.models.slice(0,3).join(', '))+'）' : ''}`);
-    lines.push(`短对话：${j.chat_ok?'✓ 通了（回复：'+esc(j.chat_reply||'(空)')+'）':(j.errors && j.errors.chat) ? '✗ ' + j.errors.chat : '✗ 失败'}`);
+    lines.push(`模型列表：${res.models_ok?'✓ 拉到 '+res.models_count+' 个':(res.errors.models?'✗ '+res.errors.models:'✗ 未拉取')}${res.models && res.models.length ? '（示例：'+esc(res.models.slice(0,3).join(', '))+'）' : ''}`);
+    lines.push(`短对话：${res.chat_ok?'✓ 通了（回复：'+esc(res.chat_reply||'(空)')+'）':(res.errors.chat?'✗ '+res.errors.chat:'✗ 失败')}`);
     document.getElementById('llmResult').innerHTML = lines.join('<br>');
     toast(ok ? '双探针都通了，可以保存' : '有探针失败，看上面详情', !ok);
   } catch (e) {
@@ -2847,7 +2740,15 @@ window.openSettings=()=>{
     <button class="btn sm block ghost" onclick="openCls()">编辑课表</button>
     <div class="hint">课表按「星期几 + 时段」重复，不区分单双周。需要单双周的话告诉我，下个版本加。</div>
     <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">AI 对话</div>
-    <div class="hint">小墨的模型 / API Key / 接入方式，点 AI 悬浮球 → 云图标 ☁ 里配置。这里不重复放了。</div>
+    <div class="hint">小墨的模型 / API Key / 接入方式，点 AI 悬浮球 → 云图标 ☁ 里配置（网页直连）。这里不重复放了。</div>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">数据工具</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm ghost" onclick="exportJSON()">导出备份</button>
+      <button class="btn sm ghost" onclick="fileIn.click()">导入恢复</button>
+      <button class="btn sm ghost" onclick="clearSeed()">清空示例</button>
+      <button class="btn sm dgr" onclick="wipeAll()">清空全部</button>
+    </div>
+    <div class="hint">导出 = 存一份 JSON 备份；导入 = 从备份恢复；清空示例 = 删掉预置演示数据；清空全部 = 删除所有数据（先导出！）。</div>
     <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">关于</div>
     <div class="hint">当前版本：${WM_VER}${location.protocol==='file:'?'（本地文件版，不做更新检查）':''}</div>
     <button class="btn sm block ghost" onclick="checkUpdateNow()">检查更新</button>
@@ -3220,38 +3121,11 @@ window.switchTab=name=>{
   const pane=document.getElementById('pane-'+name); if(pane) pane.classList.remove('hide');
   document.querySelectorAll('#tabs .tab').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
   document.querySelectorAll('#mbNav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
-  // 移动端切换时收起底部 sheet
-  if(location.protocol!=='file:' && window.innerWidth<=768){
-    const sheet=document.getElementById('toolSheet'); if(sheet) sheet.style.display='none';
-    const back=document.getElementById('toolBack'); if(back) back.style.display='none';
-  }
   save('tab',name);
   window.scrollTo(0,0);
 };
-/* 移动端：底部工具栏 sheet（导出/导入/清空/设置） */
-window.toggleToolSheet=()=>{
-  let sheet=document.getElementById('toolSheet');
-  let back=document.getElementById('toolBack');
-  if(sheet){ sheet.style.display=sheet.style.display==='flex'?'none':'flex'; if(back) back.style.display=back.style.display==='block'?'none':'block'; return; }
-  // 首次创建
-  back=document.createElement('div'); back.id='toolBack'; back.className='tool-back'; back.onclick=window.toggleToolSheet;
-  document.body.appendChild(back);
-  sheet=document.createElement('div'); sheet.id='toolSheet'; sheet.className='tool-sheet';
-  sheet.innerHTML=`
-    <button class="btn pri" onclick="exportJSON();toggleToolSheet()">导出 JSON 备份</button>
-    <button class="btn ghost" onclick="fileIn.click();toggleToolSheet()">导入恢复</button>
-    <button class="btn ghost" onclick="clearSeed();toggleToolSheet()">清空示例数据</button>
-    <button class="btn dgr" onclick="askConfirm('确定清空工作台所有数据吗？',()=>{wipeAll();toggleToolSheet();})">清空全部</button>
-    <button class="btn ghost" onclick="openSettings();toggleToolSheet()">打开设置</button>
-  `;
-  document.body.appendChild(sheet);
-  back.style.display='block'; sheet.style.display='flex';
-};
-/* 移动端：根据宽度自动显示/隐藏底部 nav + 工具按钮 */
-function syncMbUI(){
-  const isMb = matchMedia && matchMedia('(max-width:768px)').matches;
-  const tool=document.getElementById('toolHandle'); if(tool) tool.classList.toggle('hide', !isMb);
-}
+/* 移动端：根据宽度自动显示/隐藏底部 nav */
+function syncMbUI(){}
 function renderAll(){
   renderWeek(); renderWx(); renderSleep();
   renderTodayBox(); renderNext(); renderToday(); renderDdl(); renderMat();
