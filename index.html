@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>我的工作台</title>
+<!-- WM_VER:2026-08-03.1 -->
 <style>
 :root{
   /* 表面分层（暖米白底 → 白 → 暖浅橙） */
@@ -327,13 +328,55 @@ svg{display:block}
 /* ---------- 布局重构（V3）：分区 tab + 列表限高 ---------- */
 .tabs{display:flex;gap:6px;margin:2px 0 12px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;background:var(--surface-3);border:1px solid var(--line);border-radius:var(--r-md);padding:5px}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:0 0 auto;padding:9px 18px;border-radius:var(--r-sm);border:none;background:transparent;font-size:13.5px;font-weight:600;color:var(--sub);cursor:pointer;min-height:40px;white-space:nowrap;text-align:center;transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform var(--dur-fast) var(--ease-spring)}
+.tab{flex:0 0 auto;padding:9px 18px;border-radius:var(--r-sm);border:none;background:transparent;font-size:13.5px;font-weight:600;color:var(--sub);cursor:pointer;min-height:40px;white-space:nowrap;flex-shrink:0;text-align:center;transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform var(--dur-fast) var(--ease-spring)}
 .tab:hover{background:var(--soft);color:var(--brand)}
 .tab:active{transform:scale(.97)}
 .tab.on{background:#fff;color:var(--brand-ink);box-shadow:0 1px 3px rgba(30,35,48,.06),0 2px 10px rgba(249,115,22,.12),inset 0 0 0 1px var(--brand-soft)}
 @media(min-width:769px){
   .tabs .tab{flex:1}
   .tab{text-align:center}
+}
+/* ---------- 手机端底部 App 化导航 ---------- */
+.mb-nav{display:none}
+@media(max-width:768px){
+  body{padding-bottom:64px}
+  .mb-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:55;background:rgba(253,246,238,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom)) 4px;justify-content:space-around}
+  .mb-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;color:var(--sub);font-size:10.5px;font-weight:600;padding:4px 2px;cursor:pointer;border-radius:10px}
+  .mb-nav button.on{color:var(--brand)}
+  .mb-nav button svg{width:20px;height:20px}
+  .orb{right:14px;bottom:72px}    /* 让悬浮球不被底部 nav 遮挡 */
+}
+@media(prefers-color-scheme:dark){
+  .mb-nav{background:rgba(18,16,14,.92)}
+}
+/* ---------- 顶栏紧凑（移动端） ---------- */
+@media(max-width:768px){
+  .tb-brand em{display:none}
+  .tb-stats #tbClock,.tb-stats #tbWx{flex:1 1 auto;min-width:0}
+  .tb-stats #tbWeek,.tb-stats #tbSleep{display:none}
+  #topbar .iconbtn{flex:0 0 36px;width:36px;height:36px}
+  #topbar{padding:8px 0}
+}
+/* ---------- 顶部工具栏（移动端折叠为单一入口） ---------- */
+#backup{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+#backup .use{flex:1 1 100%;order:99;text-align:right;margin-top:4px}
+#backup #fileIn{display:none}
+@media(max-width:768px){
+  /* 移动端：4 个工具按钮隐藏（已搬到工具 sheet），useTip 文字保留显示 */
+  #backup .btn{display:none}
+  #backup .use{flex:1 1 auto;order:0;margin:0;text-align:right;font-size:11.5px;color:var(--faint)}
+  #backup.open{display:flex}
+  .tool-sheet{position:fixed;left:0;right:0;bottom:64px;z-index:58;background:var(--surface-1);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -8px 30px rgba(0,0,0,.18);animation:toastIn .28s var(--ease-spring) both}
+  .tool-sheet button{width:100%;min-height:46px;font-size:15px}
+  .tool-back{display:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,.35);z-index:57;animation:toastIn .22s var(--ease-spring) both}
+  .tool-handle{position:fixed;right:14px;bottom:140px;z-index:58;width:46px;height:46px;border-radius:50%;background:var(--brand);color:#fff;border:none;box-shadow:0 6px 20px rgba(249,115,22,.4);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+}
+/* ---------- 任务条目（移动端更大点击区） ---------- */
+@media(max-width:768px){
+  .ddl-row{padding:12px 10px;min-height:48px}
+  .ddl-row .d{font-size:13px}
+  .ddl-row .t{font-size:15px}
+  .ddl-row .act-btn{min-width:48px;min-height:36px;padding:6px 12px;font-size:13px}
 }
 #ddlList,#matList,#noteList,#walList,#exList,#habitList,#laterList{max-height:52vh;overflow-y:auto;padding-right:3px}
 
@@ -476,7 +519,7 @@ svg{display:block}
   </div>
   <div id="nudge" class="hide"></div>
 
-  <!-- ============ 分区导航 ============ -->
+  <!-- ============ 分区导航（桌面端） ============ -->
   <nav class="tabs" id="tabs">
     <button class="tab on" data-tab="overview" onclick="switchTab('overview')">概览</button>
     <button class="tab" data-tab="study" onclick="switchTab('study')">学习</button>
@@ -485,6 +528,35 @@ svg{display:block}
     <button class="tab" data-tab="habit" onclick="switchTab('habit')">习惯</button>
     <button class="tab" data-tab="diary" onclick="switchTab('diary')">日记</button>
   </nav>
+
+  <!-- ============ 移动端底部 App 化导航 ============ -->
+  <nav class="mb-nav" id="mbNav" aria-label="主导航">
+    <button data-tab="overview" onclick="switchTab('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 4l9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+      <span>首页</span>
+    </button>
+    <button data-tab="study" onclick="switchTab('study')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a3 3 0 013 3v13a3 3 0 01-3 3H4z"/><path d="M4 4v16M8 8h7M8 12h5"/></svg>
+      <span>学习</span>
+    </button>
+    <button data-tab="life" onclick="switchTab('life')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 6h11a2 2 0 010 4H5M5 14h13a2 2 0 010 4H5"/></svg>
+      <span>生活</span>
+    </button>
+    <button data-tab="habit" onclick="switchTab('habit')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 4 4 6 4 10a4 4 0 11-8 0c0-2 1-3 2-4 0 1-1 2-1 3M12 22v-6"/></svg>
+      <span>习惯</span>
+    </button>
+    <button data-tab="diary" onclick="switchTab('diary')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>日记</span>
+    </button>
+  </nav>
+
+  <!-- ============ 移动端工具栏入口（浮动按钮 + 底部 sheet） ============ -->
+  <button class="tool-handle hide" id="toolHandle" onclick="toggleToolSheet()" aria-label="工具">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+  </button>
 
   <!-- ============ 概览：今天要处理 + 下一节课 + 今日课表 ============ -->
   <div class="tabpane" id="pane-overview">
@@ -938,6 +1010,46 @@ let HABIT = load('habit', SEED_HABIT);   // 习惯打卡
 let DIARY = load('diary', []);            // 日记（每天一篇，按日期）
 let WTYPE = 'exp';                       // 记账当前类型
 let HCOLOR= 'var(--brand)';                   // 新建习惯的当前选色
+
+/* =========================================================
+   4a. 检查更新（GitHub Pages 部署版）
+   页面 HTML 里带版本号标记：<!-- WM_VER:2026-08-03.1 -->
+   启动时 fetch 当前网址，提取云端版本号对比；
+   发现新版 → 提醒用户去 GitHub 仓库更新代码。
+   ========================================================= */
+const WM_VER = '2026-08-03.1';   // 当前版本（每次改代码后递增）
+function wmVerNum(v){ const m=String(v||'').match(/(\d{4})-(\d{2})-(\d{2})\.(\d+)/); return m? (+m[1])*1000000+(+m[2])*10000+(+m[3])*100+(+m[4]) : 0; }
+function checkUpdate(){
+  try{
+    if(location.protocol==='file:') return;                 // 本地文件无需检查
+    if(!/^https?:$/.test(location.protocol)) return;
+    // 只对比当前页面自身（GitHub Pages 上的 index.html），避免外部请求
+    fetch(location.href, { cache:'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined })
+      .then(r=>r.ok ? r.text() : '')
+      .then(html=>{
+        const m=html && html.match(/WM_VER:([\d.-]+)/);
+        if(!m) return;
+        const cloud=m[1].trim();
+        if(wmVerNum(cloud) > wmVerNum(WM_VER)){
+          setTimeout(()=>{
+            toast('发现新版本 '+cloud+'，当前 '+WM_VER+'。去 GitHub 仓库更新 index.html 即可获得新功能。', true);
+          }, 2500);
+        }
+      }).catch(()=>{});
+  }catch(e){}
+}
+window.checkUpdateNow=()=>{
+  toast('正在检查更新…');
+  fetch(location.href, { cache:'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined })
+    .then(r=>r.ok ? r.text() : '')
+    .then(html=>{
+      const m=html && html.match(/WM_VER:([\d.-]+)/);
+      if(!m) return toast('没检测到版本标记（可能不是部署版）', true);
+      const cloud=m[1].trim();
+      if(wmVerNum(cloud) > wmVerNum(WM_VER)) toast('有新版本 '+cloud+'（当前 '+WM_VER+'），去 GitHub 更新吧！', true);
+      else toast('已是最新版本 '+WM_VER+' ✓');
+    }).catch(()=>toast('检查失败（网络或跨域限制）', true));
+};
 
 /* =========================================================
    4b. 云端同步（Supabase REST + fetch，零外部 JS 依赖）
@@ -2736,6 +2848,10 @@ window.openSettings=()=>{
     <div class="hint">课表按「星期几 + 时段」重复，不区分单双周。需要单双周的话告诉我，下个版本加。</div>
     <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">AI 对话</div>
     <div class="hint">小墨的模型 / API Key / 接入方式，点 AI 悬浮球 → 云图标 ☁ 里配置。这里不重复放了。</div>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">关于</div>
+    <div class="hint">当前版本：${WM_VER}${location.protocol==='file:'?'（本地文件版，不做更新检查）':''}</div>
+    <button class="btn sm block ghost" onclick="checkUpdateNow()">检查更新</button>
+    <div class="hint">部署在 GitHub Pages 时，每次打开会自动检查有没有新版本；发现新版会提示去仓库更新。</div>
     <button class="btn pri block" style="margin-top:8px" onclick="saveSettings()">保存设置</button>`);
   renderCloudStatus();
 };
@@ -3103,9 +3219,39 @@ window.switchTab=name=>{
   document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hide'));
   const pane=document.getElementById('pane-'+name); if(pane) pane.classList.remove('hide');
   document.querySelectorAll('#tabs .tab').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
+  document.querySelectorAll('#mbNav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
+  // 移动端切换时收起底部 sheet
+  if(location.protocol!=='file:' && window.innerWidth<=768){
+    const sheet=document.getElementById('toolSheet'); if(sheet) sheet.style.display='none';
+    const back=document.getElementById('toolBack'); if(back) back.style.display='none';
+  }
   save('tab',name);
   window.scrollTo(0,0);
 };
+/* 移动端：底部工具栏 sheet（导出/导入/清空/设置） */
+window.toggleToolSheet=()=>{
+  let sheet=document.getElementById('toolSheet');
+  let back=document.getElementById('toolBack');
+  if(sheet){ sheet.style.display=sheet.style.display==='flex'?'none':'flex'; if(back) back.style.display=back.style.display==='block'?'none':'block'; return; }
+  // 首次创建
+  back=document.createElement('div'); back.id='toolBack'; back.className='tool-back'; back.onclick=window.toggleToolSheet;
+  document.body.appendChild(back);
+  sheet=document.createElement('div'); sheet.id='toolSheet'; sheet.className='tool-sheet';
+  sheet.innerHTML=`
+    <button class="btn pri" onclick="exportJSON();toggleToolSheet()">导出 JSON 备份</button>
+    <button class="btn ghost" onclick="fileIn.click();toggleToolSheet()">导入恢复</button>
+    <button class="btn ghost" onclick="clearSeed();toggleToolSheet()">清空示例数据</button>
+    <button class="btn dgr" onclick="askConfirm('确定清空工作台所有数据吗？',()=>{wipeAll();toggleToolSheet();})">清空全部</button>
+    <button class="btn ghost" onclick="openSettings();toggleToolSheet()">打开设置</button>
+  `;
+  document.body.appendChild(sheet);
+  back.style.display='block'; sheet.style.display='flex';
+};
+/* 移动端：根据宽度自动显示/隐藏底部 nav + 工具按钮 */
+function syncMbUI(){
+  const isMb = matchMedia && matchMedia('(max-width:768px)').matches;
+  const tool=document.getElementById('toolHandle'); if(tool) tool.classList.toggle('hide', !isMb);
+}
 function renderAll(){
   renderWeek(); renderWx(); renderSleep();
   renderTodayBox(); renderNext(); renderToday(); renderDdl(); renderMat();
@@ -3122,11 +3268,13 @@ document.getElementById('wMic').innerHTML = ico('mic',15,'var(--brand)') + ' 语
 document.querySelector('#topbar .iconbtn').innerHTML=ico('gear',18);
 
 /* 启动 */
+syncMbUI(); addEventListener('resize', syncMbUI);
 placeOrb(); renderNoise(); renderSwatches(); renderAll(); fetchWx();
 renderClock(); setInterval(renderClock,1000);
 switchTab(load('tab','overview'));   // 恢复上次所在分区（默认概览）
 setTimeout(syncAI,1500);   // 启动后把当前数据同步给本地 ai-bridge（服务没启动则静默跳过）
 cloudInit();               // 已登录 → 启动后自动拉取云端数据（按时间取新）
+setTimeout(checkUpdate, 3200);   // 启动后检查是否有新版本（GitHub Pages 部署版）
 if(SET.autoLoc!==false) setTimeout(()=>locateMe(true),1600);   // 打开工作台自动定位当前位置（静默）
 // theme-color 跟随系统深浅色动态切换
 const syncThemeColor=()=>{ const dark=matchMedia('(prefers-color-scheme:dark)').matches; document.querySelector('meta[name=theme-color]').setAttribute('content', dark?'#12100E':'#F97316'); };
