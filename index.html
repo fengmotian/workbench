@@ -1206,13 +1206,14 @@ function renderCloudStatus(){
   else el.innerHTML='未登录（数据只存本机）。登录后课表/作业/记账/日记等会自动备份到云端。';
 }
 
-/* AI 桥实时同步：每次数据保存后 debounce 推送快照；服务不可用时冷却 30s 避免刷失败请求（不影响工作台） */
+/* AI 数据同步：每次数据保存后 debounce 推送快照；服务不可用时冷却 30s 避免刷失败请求（不影响工作台）
+   注：现已改为网页直连模式，此同步仅在配置仍为桥模式时兜底；直连模式直接跳过 */
 let aiSyncT=null, aiDown=0;
 function syncAI(){
   clearTimeout(aiSyncT);
   aiSyncT=setTimeout(()=>{
     if(Date.now()-aiDown<30000) return;
-    if (typeof aiCfg === 'function' && aiCfg().mode === 'direct') return;   // 直连模式：无需同步本地桥
+    if (typeof aiCfg === 'function' && aiCfg().mode === 'direct') return;   // 直连模式：无需同步
     try{
       fetch((SET&&SET.aiUrl||'http://localhost:8787').replace(/localhost/i,'127.0.0.1')+'/v1/sync',{
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -1246,14 +1247,44 @@ const saveAll = {
    5. Toast
    ========================================================= */
 let toastT;
-function toast(msg, bad){
+function toast(msg, bad, undo){
+  // undo = {kind, items, label}：显示撤销按钮，点击恢复被删数据
   let el=document.getElementById('toast');
   if(!el){ el=document.createElement('div'); el.id='toast';
-    el.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:500;background:var(--toast-bg);color:#fff;padding:11px 17px;border-radius:12px;font-size:13.5px;max-width:min(420px,90vw);box-shadow:0 8px 26px rgba(0,0,0,.24);line-height:1.5;animation:toastIn .28s var(--ease-spring) both';
+    el.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:500;background:var(--toast-bg);color:#fff;padding:11px 17px;border-radius:12px;font-size:13.5px;max-width:min(420px,90vw);box-shadow:0 8px 26px rgba(0,0,0,.24);line-height:1.5;animation:toastIn .28s var(--ease-spring) both;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
     document.body.appendChild(el); }
-  el.textContent=msg; el.style.background = bad?'#B91C1C':'var(--toast-bg)'; el.style.display='block';
-  clearTimeout(toastT); toastT=setTimeout(()=>{ el.classList.add('toast-out'); setTimeout(()=>{ el.style.display='none'; el.classList.remove('toast-out'); }, 220); }, bad?5200:2400);
+  el.innerHTML=''; el.style.background = bad?'#B91C1C':'var(--toast-bg)'; el.style.display='flex';
+  const span=document.createElement('span'); span.textContent=msg; el.appendChild(span);
+  if(undo){
+    const btn=document.createElement('button');
+    btn.textContent='撤销';
+    btn.style.cssText='background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:4px 12px;font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0';
+    btn.onclick=()=>{ undoDo(undo); clearTimeout(toastT); el.style.display='none'; };
+    el.appendChild(btn);
+  }
+  clearTimeout(toastT); toastT=setTimeout(()=>{ el.classList.add('toast-out'); setTimeout(()=>{ el.style.display='none'; el.classList.remove('toast-out'); }, 220); }, (bad||undo)?5200:2400);
 }
+/* 撤销栈：记录最近删除，支持一步回退（单条/多条/整类） */
+let undoStack=null;
+function pushUndo(kind, items, label){
+  // items: [{item, index}] 按原位置记录；只保留最近一次删除
+  undoStack={kind, items:items.slice(), label};
+}
+function undoDo(u){
+  if(!u || !u.items || !u.items.length) return;
+  const arr={habit:HABIT,ddl:DDL,mat:MAT,note:NOTE,later:LATER,diary:DIARY,wallet:WALLET,expr:EXPR,cls:CLS,mem:MEM}[u.kind];
+  if(!arr) return;
+  // 按原 index 从小到大插入，splice 会自动把后续项后移，保证顺序与位置都正确
+  u.items.slice().sort((a,b)=>a.index-b.index).forEach(({item,index})=>{
+    arr.splice(Math.min(index, arr.length), 0, item);
+  });
+  const saveFn={habit:saveAll.habit,ddl:saveAll.ddl,mat:saveAll.mat,note:saveAll.note,later:saveAll.later,diary:saveAll.diary,wallet:saveAll.wallet,expr:saveAll.expr,cls:saveAll.cls,mem:saveAll.mem}[u.kind];
+  if(saveFn) saveFn();
+  renderAll();
+  toast('已撤销删除'+(u.label?`（${u.label}）`:''));
+  undoStack=null;
+}
+window.undoDelete=()=>{ if(undoStack) undoDo(undoStack); };
 
 /* =========================================================
    6. 教学周历
@@ -1383,7 +1414,7 @@ function renderDdl(){
     (done.length?`<div style="font-size:11.5px;color:var(--faint);margin-top:13px;padding-top:9px;border-top:1px dashed var(--line)">已完成 ${done.length}</div>`+done.slice(0,5).map(row).join(''):'');
 }
 window.toggleDdl=id=>{ const d=DDL.find(x=>x.id===id); if(!d)return; d.done=!d.done; saveAll.ddl(); renderAll(); if(d.done) toast('搞定一件 👍'); };
-window.delDdl=id=>{ askConfirm('删除这条作业？',()=>{ DDL=DDL.filter(x=>x.id!==id); saveAll.ddl(); renderAll(); }); };
+window.delDdl=id=>{ removeWithUndo('ddl', DDL, x=>x.id===id, '作业'); };
 
 /* =========================================================
    9. 资料索引（按课名聚合）
@@ -1402,7 +1433,7 @@ function renderMat(){
       </div>`).join('')}
     </details>`).join('') : `<div class="empty">还没有资料，点下面按钮加第一条</div>`;
 }
-window.delMat=id=>{ askConfirm('删除这条资料？',()=>{ MAT=MAT.filter(x=>x.id!==id); saveAll.mat(); renderMat(); }); };
+window.delMat=id=>{ removeWithUndo('mat', MAT, x=>x.id===id, '资料'); };
 
 /* =========================================================
    10. 番茄钟 —— 坑1：用 endTimestamp 反算，绝不累加计数器
@@ -1604,7 +1635,7 @@ window.addNote=()=>{
   if(!saveAll.note()){ NOTE.shift(); return; }
   document.getElementById('noteTx').value=''; dropShot(); renderNote(); renderUse(); toast('已保存');
 };
-window.delNote=id=>{ askConfirm('删除这条笔记？',()=>{ NOTE=NOTE.filter(n=>n.id!==id); saveAll.note(); renderNote(); renderUse(); }); };
+window.delNote=id=>{ removeWithUndo('note', NOTE, n=>n.id===id, '笔记'); };
 function renderNote(){
   document.getElementById('cNote').textContent=NOTE.length;
   document.getElementById('noteList').innerHTML = NOTE.length? NOTE.map(n=>`
@@ -1642,10 +1673,10 @@ window.addLater=()=>{
   renderLater(); renderUse();
 };
 window.toggleLater=id=>{ const l=LATER.find(x=>x.id===id); if(!l)return; l.done=!l.done; saveAll.later(); renderLater(); };
-window.delLater=id=>{ LATER=LATER.filter(x=>x.id!==id); saveAll.later(); renderLater(); };
+window.delLater=id=>{ removeWithUndo('later', LATER, x=>x.id===id, '稍后处理'); };
 
 /* =========================================================
-   13b. 日记（每天一篇 + 心情标签 + 周/月翻页；数据实时同步给 ai-bridge，小墨可读取）
+   13b. 日记（每天一篇 + 心情标签 + 周/月翻页；数据实时同步给云端，小墨可读取）
    ========================================================= */
 const MOODS=[['happy','开心','#10B981'],['calm','平静','#378ADD'],['tired','疲惫','#EF9F27'],['low','低落','#7F77DD'],['angry','烦躁','#E24B4A']];
 const MOODMAP=Object.fromEntries(MOODS.map(m=>[m[0],{name:m[1],color:m[2]}]));
@@ -1768,10 +1799,7 @@ window.editDiary=date=>{
   document.getElementById('dyTx').focus();
   toast('已载入，改完点保存');
 };
-window.delDiary=date=>{
-  askConfirm(`删除 ${esc(date)} 的日记？删除后不可恢复。`,()=>{
-    DIARY=DIARY.filter(x=>x.date!==date); saveAll.diary(); renderDiary(); toast('已删除'); },true);
-};
+window.delDiary=date=>{ removeWithUndo('diary', DIARY, x=>String(x.date)===String(date), '日记', `删除 ${esc(date)} 的日记？（删除后可用"撤销"恢复）`); };
 
 /* =========================================================
    14. 天气（Open-Meteo，坑5：缓存兜底 + 手动录入）
@@ -2082,9 +2110,8 @@ function brain(q){
   return null;   // 其余全部交 AI
 }
 /* =========================================================
-   AI 直连模式（网页版）：浏览器直接调 DeepSeek，无需本地桥
-   配置存 localStorage：wb_deck_ai = {mode, baseURL, model, apiKey, searchKey}
-   mode: 'direct' 直连 | 'bridge' 本地桥（默认）
+   AI 直连模式（网页版）：浏览器直接调大模型 API
+   配置存 localStorage：wb_deck_ai = {mode:'direct', baseURL, model, apiKey, searchKey}
    ========================================================= */
 function bjISO(ms){ const d=new Date((ms==null?Date.now():ms)+8*3600e3); return d.toISOString().replace('T',' ').slice(0,19); }
 function aiCfg(){
@@ -2162,7 +2189,14 @@ function aiToolInfo(name, argsObj){
       if(!ACTS[a.action]) return '未知动作：'+a.action;
       for(const k of ACTS[a.action]){ const v=d[k]; if(v==null||String(v).trim()==='') return `参数缺失：${k}`; }
       if(a.action==='add_wallet'&&!(Math.abs(Number(d.amount))>0)) return '金额不合法';
-      applyAction(a); return '已执行：'+a.action;
+      // 删除类：applyAction 会弹确认框，返回 true=已请求确认 / false=失败 / 字符串=提示
+      const r=applyAction(a);
+      if(a.action.startsWith('del_')){
+        if(r===false) return '删除请求未发起（未找到或参数问题），告诉用户实际情况，不要声称已删除';
+        if(r===true) return '已向用户弹出删除确认框，正在等待用户点击确认。删除尚未执行，回复用户：请在弹出的确认框点确定。不要声称已删除';
+        return r;
+      }
+      return '已执行：'+a.action;
     }
     case 'web_search': {
       // 浏览器直连 Tavily：有 key 用 key，无 key 走 keyless（免费限流，免注册）
@@ -2210,7 +2244,7 @@ const AI_TOOLS=[
   {type:'function',function:{name:'save_memo',description:'保存一条长期记忆。当用户提到重要个人信息（名字/生日/学校）、目标、计划、偏好、重要事件时主动调用，让它跨会话记住',parameters:{type:'object',properties:{text:{type:'string',description:'要记住的内容，一句话，≤200字'}},required:['text']}}},
   {type:'function',function:{name:'get_diary',description:'用户的日记（不传日期=最近5篇；可传 YYYY-MM-DD 查某天）',parameters:{type:'object',properties:{date:{type:'string',description:'可选，格式 YYYY-MM-DD'}}}}},
   {type:'function',function:{name:'web_search',description:'联网搜索实时信息（新闻/百科/知识等），结果按来源附注',parameters:{type:'object',properties:{query:{type:'string',description:'搜索关键词'}},required:['query']}}},
-  {type:'function',function:{name:'act',description:'帮用户操作工作台数据（新增/删除）。action 取值：add_habit{name,color?,days?}/add_ddl{title,course?,due?}/add_later{title,mins?}/add_note{text}/add_express{company,code,loc?,note?}/add_wallet{type:exp|inc,amount,cat?,note?}/add_diary{date?,text,mood?}/add_cls{day(0-6),s,e,name,room?}/del_habit{name}/del_ddl{title}/del_later{title}/del_note{text}/del_expr{code}。规则：用户明确要求新增/删除数据时才调用；due 用 YYYY-MM-DD，s/e 用 HH:MM',parameters:{type:'object',properties:{action:{type:'string',description:'动作名'},data:{type:'object',description:'动作参数'}},required:['action','data']}}}
+  {type:'function',function:{name:'act',description:'帮用户操作工作台数据（新增/删除）。action 取值：add_habit{name,color?,days?}/add_ddl{title,course?,due?}/add_later{title,mins?}/add_note{text}/add_express{company,code,loc?,note?}/add_wallet{type:exp|inc,amount,cat?,note?}/add_diary{date?,text,mood?}/add_cls{day(0-6),s,e,name,room?}/del_habit{name}/del_ddl{title}/del_later{title}/del_note{text}/del_expr{code}。规则：用户明确要求新增/删除数据时才调用；删除的 name 传"全部"/"所有"/"*"可整类删除；删除请求会弹确认框等用户确认，删除成功与否以工具返回为准；due 用 YYYY-MM-DD，s/e 用 HH:MM',parameters:{type:'object',properties:{action:{type:'string',description:'动作名'},data:{type:'object',description:'动作参数'}},required:['action','data']}}}
 ];
 function aiSysPrompt(){
   const facts=(MEM.facts||[]).slice(-40).map(f=>String(f.t).slice(0,120));
@@ -2222,7 +2256,7 @@ function aiSysPrompt(){
 2. 回答简洁、口语化，直接给结论和下一步建议；数据为空时如实说明"还没有数据"。
 3. 用户只是闲聊/问知识类问题时，直接用你的知识回答，不必调用工具。
 4. 主动记忆：识别到"重要消息"必须调用 save_memo 保存——包括用户真实姓名/生日/学校专业/家庭信息；考试、面试、实习、请假等安排（含日期）；长期目标与计划；明确的个人偏好；用户要求记住的任何话；承诺要做的事。普通闲聊不要存。
-5. 操作数据：用户明确要求"帮我加/记/新增/写/删掉"某数据时，必须调用 act 工具让工作台执行，禁止只口头回复"已添加"而不调工具。消费记账（如"花了 N 元/块钱"）默认调 act add_wallet 记支出。删除类（del_*）用户直接说"删掉/删除 xxx"即视为已授权。用户只是随口提没有明确要求操作时不要调 act。
+5. 操作数据：用户明确要求"帮我加/记/新增/写/删掉"某数据时，必须调用 act 工具让工作台执行，禁止只口头回复"已添加"而不调工具。消费记账（如"花了 N 元/块钱"）默认调 act add_wallet 记支出。**删除类（del_*）铁律：每次删除都必须经用户二次确认——你调用 act 后工作台会弹出确认框，删除尚未执行；你必须回复"已弹出确认框，请在弹窗里点确定"之类的话，绝不能声称"已删除/已删掉/删完了"。只有用户点确定后删除才真正生效。** 用户要求"全部删除/清空"时，del_* 的 name 传"全部"。用户只是随口提没有明确要求操作时不要调 act。
 ${facts.length?`\n已保存的长期记忆（说话时优先参考，不要与记忆矛盾）：\n${facts.map((x,i)=>`${i+1}. ${x}`).join('\n')}`:''}`;
 }
 async function aiDirect(text){
@@ -2263,40 +2297,14 @@ async function aiDirect(text){
   }
   return '工具调用次数过多，请换个说法再问一次。';
 }
-/* --- AI 智能体（直连模式优先；本地桥为兼容模式；服务没启动则降级） --- */
+/* --- AI 智能体（网页直连模式） --- */
 async function aiBridge(text){
   const c=aiCfg();
-  // 直连模式：浏览器直接调 DeepSeek
+  // 直连模式：浏览器直接调大模型 API
   if(c.mode==='direct') return await aiDirect(text);
-  // 桥模式：先试本地桥，失败降级直连（若配了 Key）
-  try{
-    // 带最近对话历史（多轮上下文，16 条 ≈ 8 轮来回），让模型记得前面聊过什么
-    const hist=(MEM.chat||[]).slice(-16).map(m=>({role:m.r==='u'?'user':'assistant',content:m.t}));
-    const r=await fetch((SET.aiUrl||'http://localhost:8787').replace(/localhost/i,'127.0.0.1')+'/v1/chat',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text, history:hist}),
-      signal:AbortSignal.timeout?AbortSignal.timeout(30000):undefined
-    });
-    if(!r.ok){ const e=await r.json().catch(()=>null); throw new Error((e&&e.error&&e.error.message)||('HTTP '+r.status)); }
-    const j=await r.json();
-    // 长久记忆：小墨主动记忆的新内容，写回本地长期记忆并持久化
-    if(Array.isArray(j.memo_saved) && j.memo_saved.length){
-      let added=0;
-      j.memo_saved.forEach(t=>{
-        if(t && !MEM.facts.some(f=>f.t===t)){ MEM.facts.push({t,ts:Date.now()}); added++; }
-      });
-      if(added){ saveAll.mem(); const first=j.memo_saved[0];
-        toast('小墨记住了：'+(first.length>24?first.slice(0,24)+'…':first)+(added>1?` 等 ${added} 条`:'')); }
-    }
-    // 操作工作台：小墨通过 act 工具下达的指令，逐一执行（新增直接做，删除先确认）
-    if(Array.isArray(j.actions)) j.actions.forEach(applyAction);
-    return j.reply||'(没有回复)';
-  }catch(e){
-    aiDown=Date.now();   // 标记桥离线
-    // 桥挂了 → 若有直连 Key 自动降级，否则给提示
-    if(c.apiKey) return await aiDirect(text);
-    return 'AI 服务连不上（本地 ai-bridge 没启动，也还没配网页直连 Key）。\n配 Key：点 AI 面板的云图标 → 选「网页直连」→ 填 Key → 保存。\n\n本地规则引擎还能用——课表/作业/记账/习惯这些直接问就行。';
-  }
+  // 兼容兜底：旧配置若仍为桥模式，也一律走直连（旧模式已废弃）
+  if(c.apiKey) return await aiDirect(text);
+  return 'AI 服务没配置好。点 AI 面板的云图标 → 填 Key → 保存。\n\n本地规则引擎还能用——课表/作业/记账/习惯这些直接问就行。';
 }
 /* --- 小墨操作工作台：applyAction（新增直接执行；删除 askConfirm 确认后才删） --- */
 window.applyAction=a=>{ try{
@@ -2313,22 +2321,95 @@ window.applyAction=a=>{ try{
     case 'add_wallet': { if(!need(D.amount,'金额'))return; const amt=Math.abs(Number(D.amount)); if(!(amt>0))return toast('小墨操作金额不合法',true); WALLET.unshift({id:'w'+Date.now(),type:txt(D.type)==='inc'?'inc':'exp',amount:Math.round(amt*100)/100,cat:txt(D.cat||'').slice(0,20),note:txt(D.note||'').slice(0,60),ts:Date.now()}); saveAll.wallet(); renderWallet(); renderUse(); toast('小墨已记账：'+(txt(D.type)==='inc'?'收入':'支出')+' ¥'+Math.round(amt*100)/100); break; }
     case 'add_diary': { const t=txt(D.text).slice(0,1000); if(!t)return toast('小墨操作缺少参数：内容',true); const date=/^\d{4}-\d{2}-\d{2}$/.test(txt(D.date))?txt(D.date):todayYMD(); const mood=MOODS.some(m=>m[0]===D.mood)?txt(D.mood):''; const i=DIARY.findIndex(x=>x.date===date); const obj={date,text:t,mood,ts:Date.now()}; if(i>=0)DIARY[i]=obj;else DIARY.push(obj); saveAll.diary(); renderDiary(); toast('小墨已写入日记（'+date+'）'); break; }
     case 'add_cls': { if(!need(D.name,'课程名')||!need(D.day,'星期')||!need(D.s,'开始')||!need(D.e,'结束'))return; const day=parseInt(D.day,10),s=txt(D.s),e=txt(D.e); const hh=/^\d{1,2}:\d{2}$/, toMin=x=>{const p=x.split(':');return +p[0]*60+ +p[1];}; if(!(day>=0&&day<=6)||!hh.test(s)||!hh.test(e)||toMin(e)<=toMin(s))return toast('小墨操作课表时间格式不对',true); CLS.push({id:'c'+Date.now(),day,name:txt(D.name).slice(0,30),s,e,room:txt(D.room||'').slice(0,30)}); saveAll.cls(); renderAll(); toast('小墨已添加课程：'+txt(D.name)); break; }
-    case 'del_habit': delBy('habit', D.name, x=>x.name, '习惯'); break;
-    case 'del_ddl': delBy('ddl', D.title, x=>x.title, '作业'); break;
-    case 'del_later': delBy('later', D.title, x=>x.title, '稍后处理'); break;
-    case 'del_note': delBy('note', D.text, x=>x.text.slice(0,50), '笔记'); break;
-    case 'del_expr': delBy('expr', D.code, x=>x.code, '快递'); break;
+    case 'del_habit': return delBy('habit', D.name, x=>x.name, '习惯');
+    case 'del_ddl': return delBy('ddl', D.title, x=>x.title, '作业');
+    case 'del_later': return delBy('later', D.title, x=>x.title, '稍后处理');
+    case 'del_note': return delBy('note', D.text, x=>x.text.slice(0,50), '笔记');
+    case 'del_expr': return delBy('expr', D.code, x=>x.code, '快递');
     default: toast('未知操作：'+a.action,true);
   }
 }catch(e){ console.error('applyAction',e); toast('小墨操作执行出错',true); }};
-/* 删除类：按自然键精确匹配第一条，找到后 askConfirm 用户确认才删 */
+/* 删除类：按自然键精确匹配；name 传"全部/所有/*"则整类删除。任何删除都先 askConfirm 用户确认后才删。
+   返回 true=已发起确认弹窗；false=没找到/参数错/已取消。删除后自动记录撤销栈（toast 带"撤销"按钮）。 */
+const DEL_SAVE={habit:()=>saveAll.habit(),ddl:()=>saveAll.ddl(),later:()=>saveAll.later(),note:()=>saveAll.note(),expr:()=>saveAll.expr(),cls:()=>saveAll.cls(),wallet:()=>saveAll.wallet(),diary:()=>saveAll.diary()};
+function delArr(kind){ return {habit:HABIT,ddl:DDL,later:LATER,note:NOTE,expr:EXPR,cls:CLS,wallet:WALLET,diary:DIARY}[kind]; }
+function delFinish(kind, removed, label){
+  // removed: 被删条目数组（含原 index），记录撤销栈并 toast 带撤销
+  if(removed && removed.length){ pushUndo(kind, removed.map((x,i)=>({item:x.item, index:x.index})), label); }
+  if(DEL_SAVE[kind]) DEL_SAVE[kind]();
+  renderAll();
+  toast(`已删除 ${removed.length} 条${label}`, false, {kind, items:removed.map((x,i)=>({item:x.item, index:x.index})), label});
+}
+/* 通用删除 + 撤销：按 filter 筛选出待删条目，确认后删除并记录撤销 */
+function removeWithUndo(kind, arr, filterFn, label, confirmMsg){
+  const doomed=arr.map((item,index)=>({item,index})).filter(o=>filterFn(o.item));
+  if(!doomed.length) return toast('没有可删除的'+label,true);
+  const n=doomed.length;
+  askConfirm(confirmMsg || `删除这 ${n} 条${label}？（删除后可用"撤销"恢复）`,()=>{
+    const ids=new Set(doomed.map(o=>o.item.id!==undefined?o.item.id:o.item));
+    const removed=arr.map((item,index)=>({item,index})).filter(o=>{
+      const key=o.item.id!==undefined?o.item.id:o.item;
+      return ids.has(key);
+    });
+    arr.splice(0,arr.length,...arr.filter(x=>{
+      const key=x.id!==undefined?x.id:x;
+      return !ids.has(key);
+    }));
+    delFinish(kind, removed, label);
+  }, true);
+}
 function delBy(kind,key,keyFn,label){
-  const arr={habit:HABIT,ddl:DDL,later:LATER,note:NOTE,expr:EXPR}[kind];
+  const arr=delArr(kind);
+  if(!arr) return toast('小墨操作类型无效：'+kind,true);
   const k=String(key||'').trim(); if(!k) return toast('小墨操作缺少参数',true);
-  const i=arr.findIndex(x=>String(keyFn(x))===k);
-  if(i<0) return toast('没找到要删除的'+label+'：'+k,true);
+  // 批量删除：关键词命中"全部/所有/全删/清空" → 整类删除
+  if(/^(全部|所有|全删|清空|删除全部|清除全部|\*|all)$/i.test(k)){
+    if(!arr.length) return toast(label+'本来就是空的',true);
+    const n=arr.length;
+    askConfirm(`小墨想删除全部 ${n} 条${label}。\n\n⚠️ 删除后可用"撤销"恢复，确定吗？`,()=>{
+      const removed=arr.map((item,index)=>({item,index}));
+      arr.length=0;
+      delFinish(kind, removed, label);
+    }, true);
+    return true;
+  }
+  // 单条删除：精确匹配第一条（支持部分匹配提示）
+  const hits=arr.map((x,i)=>({x,i})).filter(o=>String(keyFn(o.x))===k);
+  if(!hits.length){
+    // 试模糊匹配（包含关键词），方便 AI 按"名称"删
+    const fuzzy=arr.map((x,i)=>({x,i})).filter(o=>String(keyFn(o.x)).includes(k));
+    if(fuzzy.length===1){ const o=fuzzy[0]; doConfirmDelete(kind,label,o.i,keyFn); return true; }
+    if(fuzzy.length>1){
+      askConfirm(`小墨找到了 ${fuzzy.length} 条匹配「${k}」的${label}。\n\n删除这 ${fuzzy.length} 条吗？`,()=>{
+        const ids=new Set(fuzzy.map(o=>o.x.id));
+        const removed=arr.map((item,index)=>({item,index})).filter(o=>ids.has(o.item.id));
+        arr.splice(0,arr.length,...arr.filter(x=>!ids.has(x.id)));
+        delFinish(kind, removed, label);
+      }, true);
+      return true;
+    }
+    return toast('没找到要删除的'+label+'：'+k,true);
+  }
+  if(hits.length>1){
+    askConfirm(`小墨找到 ${hits.length} 条完全匹配「${k}」的${label}。\n\n删除这 ${hits.length} 条吗？`,()=>{
+      const ids=new Set(hits.map(o=>o.x.id));
+      const removed=arr.map((item,index)=>({item,index})).filter(o=>ids.has(o.item.id));
+      arr.splice(0,arr.length,...arr.filter(x=>!ids.has(x.id)));
+      delFinish(kind, removed, label);
+    }, true);
+    return true;
+  }
+  doConfirmDelete(kind,label,hits[0].i,keyFn);
+  return true;
+}
+function doConfirmDelete(kind,label,i,keyFn){
+  const arr=delArr(kind);
   const desc=String(keyFn(arr[i]));
-  askConfirm(`小墨想删除${label}：「${desc}」，确认吗？`,()=>{ arr.splice(i,1); saveAll[kind](); renderAll(); toast('已删除'+label); }, true);
+  askConfirm(`小墨想删除${label}：「${desc}」\n\n确认删除吗？（删除后可用"撤销"恢复）`,()=>{
+    const removed=[{item:arr[i], index:i}];
+    arr.splice(i,1);
+    delFinish(kind, removed, label);
+  }, true);
 }
 /* --- AI 联网搜索（async：查天气走 Open-Meteo，查百科走维基百科） --- */
 async function aiSearch(q){
@@ -2456,7 +2537,7 @@ window.openMem=()=>{
     <div style="font-size:12px;color:var(--sub);font-weight:700;margin:16px 0 7px">对话历史：${MEM.chat.length} 条</div>
     <button class="btn sm dgr block" onclick="clearChat()">清空对话历史（保留记忆）</button>`);
 };
-window.delFact=i=>{ MEM.facts.splice(i,1); saveAll.mem(); openMem(); };
+window.delFact=i=>{ if(MEM.facts[i]){ const removed=[{item:MEM.facts[i], index:i}]; MEM.facts.splice(i,1); pushUndo('mem', removed, '记忆'); saveAll.mem(); openMem(); toast('已删除记忆', false, {kind:'mem', items:removed, label:'记忆'}); } };
 window.clearChat=()=>{ askConfirm('清空对话历史？「记住」的内容会保留。',()=>{ MEM.chat=[]; saveAll.mem(); renderChat(); closeModal(); }); };
 
 /* --- 云端大模型设置面板（自定义 / 服务端模型 双 Tab + 三快捷预设） --- */
@@ -2467,7 +2548,7 @@ const LLM_PRESETS = {
 };
 let llmTabMode = 'custom';   // 'custom' | 'server'
 window.openLlmSettings=()=>{
-  // 已移除本地桥，只走网页直连
+  // 只走网页直连
   modal(`<h3>${ico('cloud',18)} 云端大模型设置<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
     <div class="hint" style="margin:2px 0 10px">网页直连模式：浏览器直接调用大模型 API（手机/分享均可用）。</div>
     <div class="llm-tabs">
@@ -2629,8 +2710,6 @@ window.llmTest=async ()=>{
     btn.disabled = false; btn.textContent = '测试 API';
   }
 };
-/* 取 ai-bridge 地址（与 aiBridge 同步） */
-function aiBase(){ return (SET.aiUrl||'http://localhost:8787').replace(/localhost/i,'127.0.0.1'); }
 
 /* =========================================================
    18. 弹层 / 设置 / 增删
@@ -2756,13 +2835,6 @@ window.openSettings=()=>{
     <button class="btn pri block" style="margin-top:8px" onclick="saveSettings()">保存设置</button>`);
   renderCloudStatus();
 };
-window.setAiModeCfg=(m)=>{
-  const cur=load('ai',{});
-  cur.mode = m==='direct'?'direct':'bridge';
-  save('ai',cur);
-  document.querySelectorAll('.llm-tabs [data-aimode]').forEach(b=>b.classList.toggle('on', b.dataset.aimode===(m==='direct'?'direct':'bridge')));
-  toast(m==='direct'?'已切换：网页直连（填 Key 后手机/朋友也能用）':'已切换：本地桥（电脑专用）');
-};
 window.cloudSaveCfg=()=>{
   const url=document.getElementById('clUrl').value.trim();
   const anonKey=document.getElementById('clAnonKey').value.trim();
@@ -2812,7 +2884,7 @@ window.addCls=()=>{
   CLS.push({id:'c'+Date.now(),day:+document.getElementById('ncD').value,s,e,name:n,room:document.getElementById('ncR').value.trim()});
   saveAll.cls(); openCls(); renderAll(); toast('已添加');
 };
-window.delCls=id=>{ CLS=CLS.filter(c=>c.id!==id); saveAll.cls(); openCls(); renderAll(); };
+window.delCls=id=>{ removeWithUndo('cls', CLS, c=>c.id===id, '课程', '删除这节课？（删除后可用"撤销"恢复）'); };
 
 /* =========================================================
    19. 导入导出（铁律2：首屏、不限条数、清空二次确认）
@@ -2867,12 +2939,28 @@ window.clearSeed=()=>{
   });
 };
 window.wipeAll=()=>{
-  askConfirm('⚠ 这会删掉工作台里的全部数据（课表、作业、笔记、专注记录、AI 记忆）。\n\n删了找不回来。确定吗？',()=>{
-    askConfirm('最后确认一次：真的要清空全部吗？\n\n强烈建议先点「导出 JSON 备份」。',()=>{
-      Object.keys(localStorage).filter(k=>k.startsWith(K)).forEach(k=>localStorage.removeItem(k));
+  askConfirm('⚠ 这会删掉工作台里的全部数据（课表、作业、笔记、专注记录、AI 记忆）。\n\n删除前会自动存一份快照，可用「撤销清空」恢复。确定吗？',()=>{
+    askConfirm('最后确认一次：真的要清空全部吗？\n\n恢复方式：清空后页面右上角会出现「撤销清空」按钮，点击可完整恢复。',()=>{
+      // 整包快照存 localStorage（临时键），清空后 reload 可恢复
+      const snap={cls:CLS,ddl:DDL,mat:MAT,note:NOTE,later:LATER,focus:FOCUS,mem:MEM,wallet:WALLET,expr:EXPR,habit:HABIT,diary:DIARY,set:SET};
+      try{ localStorage.setItem(K+'undo_snapshot', JSON.stringify(snap)); }catch(e){}
+      Object.keys(localStorage).filter(k=>k.startsWith(K) && !k.endsWith('undo_snapshot')).forEach(k=>localStorage.removeItem(k));
       location.reload();
     },true);
   },true);
+};
+/* 撤销清空：从 undo_snapshot 快照恢复整包数据 */
+window.undoWipe=()=>{
+  try{
+    const raw=localStorage.getItem(K+'undo_snapshot');
+    if(!raw) return toast('没有可恢复的快照',true);
+    const s=JSON.parse(raw);
+    CLS=s.cls||[]; DDL=s.ddl||[]; MAT=s.mat||[]; NOTE=s.note||[]; LATER=s.later||[]; FOCUS=s.focus||[]; MEM=s.mem||{facts:[],chat:[]}; WALLET=s.wallet||[]; EXPR=s.expr||[]; HABIT=s.habit||[]; DIARY=s.diary||[];
+    if(s.set) SET=Object.assign({},DEF_SET,s.set);
+    Object.keys(s).forEach(k=>{ if(['cls','ddl','mat','note','later','focus','mem','wallet','expr','habit','diary','set'].includes(k)) saveAll[k](); });
+    localStorage.removeItem(K+'undo_snapshot');
+    renderAll(); toast('已恢复清空前的全部数据');
+  }catch(e){ toast('恢复失败：'+e.message,true); }
 };
 function renderUse(){
   const mb=usageMB();
@@ -2927,7 +3015,7 @@ window.addWallet=()=>{
   renderWallet(); renderUse(); renderTodayBox();
   toast(WTYPE==='inc'?'收入已记':'支出已记');
 };
-window.delWallet=id=>{ askConfirm('删除这条记账？',()=>{ WALLET=WALLET.filter(x=>x.id!==id); saveAll.wallet(); renderWallet(); renderUse(); }); };
+window.delWallet=id=>{ removeWithUndo('wallet', WALLET, x=>x.id===id, '记账'); };
 
 /* --- 语音记账：复用 SpeechRecognition，特性检测 + 降级（坑2） --- */
 function parseSpend(text){
@@ -3002,7 +3090,7 @@ window.addExpr=()=>{
   renderExpr(); renderTodayBox(); renderUse(); toast('已添加');
 };
 window.toggleExpr=id=>{ const e=EXPR.find(x=>x.id===id); if(!e)return; e.got=!e.got; saveAll.expr(); renderExpr(); renderTodayBox(); if(e.got) toast('已取件 ✅'); };
-window.delExpr=id=>{ askConfirm('删除这条取件码？',()=>{ EXPR=EXPR.filter(x=>x.id!==id); saveAll.expr(); renderExpr(); renderTodayBox(); }); };
+window.delExpr=id=>{ removeWithUndo('expr', EXPR, x=>x.id===id, '取件码'); };
 window.copyCode=code=>{
   if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(()=>toast('取件码已复制'),()=>fallbackCopy(code)); }
   else fallbackCopy(code);
@@ -3102,7 +3190,7 @@ window.checkHabitToday=id=>{ // 只打勾，不取消（供 AI「打卡」命令
   const t=ymd(new Date());
   if(!h.logs.some(l=>ymd(new Date(l))===t)){ h.logs.push(Date.now()); saveAll.habit(); renderHabit(); renderTodayBox(); renderUse(); }
 };
-window.delHabit=id=>{ askConfirm('删除这个习惯？打卡记录会一起没。',()=>{ HABIT=HABIT.filter(x=>x.id!==id); saveAll.habit(); renderHabit(); renderTodayBox(); renderUse(); }); };
+window.delHabit=id=>{ removeWithUndo('habit', HABIT, x=>x.id===id, '习惯', '删除这个习惯？打卡记录会一起没。（删除后可用"撤销"恢复）'); };
 
 /* =========================================================
    20. 面板开关 / 渲染总入口
@@ -3146,9 +3234,10 @@ syncMbUI(); addEventListener('resize', syncMbUI);
 placeOrb(); renderNoise(); renderSwatches(); renderAll(); fetchWx();
 renderClock(); setInterval(renderClock,1000);
 switchTab(load('tab','overview'));   // 恢复上次所在分区（默认概览）
-setTimeout(syncAI,1500);   // 启动后把当前数据同步给本地 ai-bridge（服务没启动则静默跳过）
+setTimeout(syncAI,1500);   // 启动后同步数据（直连模式跳过；服务没启动则静默跳过）
 cloudInit();               // 已登录 → 启动后自动拉取云端数据（按时间取新）
 setTimeout(checkUpdate, 3200);   // 启动后检查是否有新版本（GitHub Pages 部署版）
+setTimeout(()=>{ if(localStorage.getItem(K+'undo_snapshot')){ askConfirm('检测到清空前的数据快照（课表/作业/笔记/记账等），要恢复吗？\n\n点确定 = 完整恢复清空前的数据；点取消 = 保持当前（快照会保留到下次删除）。', ()=>{ window.undoWipe(); }); } }, 500);   // 撤销清空：有快照则询问是否恢复
 if(SET.autoLoc!==false) setTimeout(()=>locateMe(true),1600);   // 打开工作台自动定位当前位置（静默）
 // theme-color 跟随系统深浅色动态切换
 const syncThemeColor=()=>{ const dark=matchMedia('(prefers-color-scheme:dark)').matches; document.querySelector('meta[name=theme-color]').setAttribute('content', dark?'#12100E':'#F97316'); };
