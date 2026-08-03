@@ -1054,10 +1054,19 @@ function cloudHeaders(extra){
   return Object.assign(h, extra||{});
 }
 async function cloudReq(method, path, body, headers){
-  const r=await fetch(cloudBase()+path, {
-    method, headers: cloudHeaders(headers), body: body ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
-  });
+  let r;
+  try{
+    r=await fetch(cloudBase()+path, {
+      method, headers: cloudHeaders(headers), body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+    });
+  }catch(e){
+    // 网络层失败：DNS 解析不了 / 被网络屏蔽 / 超时 / 跨域拦截 —— 转成中文友好提示
+    const isTimeout = e && (e.name === 'AbortError' || /timeout/i.test(String(e.message||'')));
+    const off = (navigator && navigator.onLine === false);
+    const tip = off ? '设备当前没有网络' : (isTimeout ? '连接云端服务器超时' : '连不上云端服务器（当前网络可能无法访问 supabase.co，或信号不稳定）');
+    throw new Error(tip + '。试试：切换 WiFi/移动流量，或稍后再试');
+  }
   const txt=await r.text().catch(()=> '');
   let j=null; try{ j=JSON.parse(txt); }catch(e){}
   if(!r.ok){
