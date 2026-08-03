@@ -1049,7 +1049,8 @@ function cloudSave(c){ save('cloud', Object.assign(load('cloud',{}), c)); }
 function cloudOn(){ const c=cloudCfg(); return !!(c.url && c.anonKey && c.token); }
 function cloudBase(){ const c=cloudCfg(); return (c.url || '').replace(/\/+$/,''); }
 function cloudHeaders(extra){
-  const c=cloudCfg(); const h={'apikey':c.anonKey, 'Authorization':'Bearer '+c.token, 'Content-Type':'application/json'};
+  const c=cloudCfg(); const h={'apikey':c.anonKey, 'Content-Type':'application/json'};
+  if(c.token) h['Authorization']='Bearer '+c.token;   // 仅已登录时才带用户 JWT；登录/注册时不带（避免空 Bearer 触发网关 405）
   return Object.assign(h, extra||{});
 }
 async function cloudReq(method, path, body, headers){
