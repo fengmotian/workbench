@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>我的工作台</title>
-<!-- WM_VER:2026-08-03.1 -->
+<!-- WM_VER:2026-08-03.2 -->
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js" defer></script>
 <style>
 :root{
   /* 表面分层（暖米白底 → 白 → 暖浅橙） */
@@ -1033,79 +1034,74 @@ window.checkUpdateNow=()=>{
 };
 
 /* =========================================================
-   4b. 云端同步（Supabase REST + fetch，零外部 JS 依赖）
-   配置存 wb_deck_cloud = {url, anonKey, user, uid, token, rowId, syncAt, localAt}
+   4b. 云端同步（腾讯云 CloudBase Web SDK，国内访问稳定）
+   配置存 wb_deck_cloud = {env, region, user, uid, recId, syncAt, localAt}
    登录后 saveAll 自动推送到云端；启动/登录时拉取按时间取新。
-   Supabase 免费版：无限项目、500MB 数据库、5 万月活用户。
-   需要在 Supabase 控制台建一张表 wb(id, user_id, data, updated_at) + RLS。
+   CloudBase 免费：个人版 3000 点/月；数据库集合 wb 配"仅创建者可读写"安全规则。
    ========================================================= */
 let cloudBusy=false, cloudTimer=null, cloudDown=0;
-/* 内置默认云端配置（分享版开箱即用）：
-   publishable key 是公开低权限密钥（仅登录用户访问自己的数据，RLS 隔离），可安全内嵌。
-   用户本地配置（wb_deck_cloud）优先于内置默认；不填也直接可用。 */
-const CLOUD_DEFAULT={ url:'https://bhhymvsjjyvpzsewhpzeb.supabase.co', anonKey:'sb_publishable_wK1sNBAjA0NHr5Z9OGv_fw_WkjKyQi6' };
-function cloudCfg(){ return Object.assign({}, CLOUD_DEFAULT, load('cloud', {})); }
+function cloudCfg(){ return load('cloud', {}); }
 function cloudSave(c){ save('cloud', Object.assign(load('cloud',{}), c)); }
-function cloudOn(){ const c=cloudCfg(); return !!(c.url && c.anonKey && c.token); }
-function cloudBase(){ const c=cloudCfg(); return (c.url || '').replace(/\/+$/,''); }
-function cloudHeaders(extra){
-  const c=cloudCfg(); const h={'apikey':c.anonKey, 'Content-Type':'application/json'};
-  if(c.token) h['Authorization']='Bearer '+c.token;   // 仅已登录时才带用户 JWT；登录/注册时不带（避免空 Bearer 触发网关 405）
-  return Object.assign(h, extra||{});
+function cloudOn(){ const c=cloudCfg(); return !!(c.env && c.uid); }
+function cbGet(){ return window.cbApp || null; }
+function cbAuth(){ const a=cbGet(); return a ? a.auth() : null; }
+function cbDb(){ const a=cbGet(); return a ? a.database() : null; }
+/* 初始化 SDK（懒加载，首次调用时） */
+function cloudSdkReady(){
+  if(cbGet()) return true;
+  if(!window.cloudbase) return false;   // CDN 没加载成功
+  const c=cloudCfg();
+  if(!c.env) return false;
+  try{ window.cbApp=window.cloudbase.init({ env:c.env, region:c.region||'ap-shanghai' }); return true; }
+  catch(e){ return false; }
 }
-async function cloudReq(method, path, body, headers){
-  let r;
-  try{
-    r=await fetch(cloudBase()+path, {
-      method, headers: cloudHeaders(headers), body: body ? JSON.stringify(body) : undefined,
-      signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
-    });
-  }catch(e){
-    // 网络层失败：DNS 解析不了 / 被网络屏蔽 / 超时 / 跨域拦截 —— 转成中文友好提示
-    const isTimeout = e && (e.name === 'AbortError' || /timeout/i.test(String(e.message||'')));
-    const off = (navigator && navigator.onLine === false);
-    const tip = off ? '设备当前没有网络' : (isTimeout ? '连接云端服务器超时' : '连不上云端服务器（当前网络可能无法访问 supabase.co，或信号不稳定）');
-    throw new Error(tip + '。试试：切换 WiFi/移动流量，或稍后再试');
-  }
-  const txt=await r.text().catch(()=> '');
-  let j=null; try{ j=JSON.parse(txt); }catch(e){}
-  if(!r.ok){
-    const msg=(j && (j.error_description || j.error || (j.msg) || j.message)) || ('HTTP '+r.status);
-    throw new Error(String(msg).slice(0,150));
-  }
-  return j||{};
-}
-/* 账号：注册（邮箱）/ 登录 / 登出 */
+/* 账号：注册（邮箱，需邮件确认）/ 登录 / 登出 */
 window.cloudRegister=async ()=>{
   const u=document.getElementById('clUser').value.trim(), p=document.getElementById('clPass').value;
   if(!u||!p) return toast('邮箱和密码都要填',true);
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) return toast('注册请填邮箱（如 name@example.com）',true);
   if(p.length<6) return toast('密码至少 6 位',true);
-  const btn=document.getElementById('clRegBtn'); if(btn) { btn.disabled=true; btn.textContent='注册中…'; }
+  if(!window.cloudbase) return toast('CloudBase SDK 加载失败（检查网络能否访问 static.cloudbase.net）',true);
+  const btn=document.getElementById('clRegBtn'); if(btn){ btn.disabled=true; btn.textContent='注册中…'; }
   try{
-    const j=await cloudReq('POST','/auth/v1/signup',{email:u,password:p});
-    if(j.access_token){ cloudSave({user:u, uid:j.user&&j.user.id, token:j.access_token}); }
-    else { cloudSave({user:u}); }   // 邮箱确认模式：先存邮箱，等确认后再登录
-    toast(j.access_token ? '注册成功，已自动登录' : '注册成功，请去邮箱点确认链接，再登录');
-    cloudPull(true); closeModal(); renderAll();
-  }catch(e){ toast('注册失败：'+e.message,true); }
+    if(!cloudSdkReady()) throw new Error('请先在设置里填 CloudBase 环境 ID');
+    const auth=cbAuth();
+    await auth.signUpWithEmailAndPassword(u,p);
+    cloudSave({user:u});
+    toast('注册成功！请去邮箱点确认链接，然后回来登录');
+  }catch(e){
+    let m=String(e&&e.message||e).slice(0,150);
+    if(/already|exist/i.test(m)) m='该邮箱已注册，直接登录即可';
+    else if(/denied|not allowed|closed/i.test(m)) m='注册被拒绝（确认环境已开启邮箱登录方式）';
+    toast('注册失败：'+m,true);
+  }
   finally{ if(btn){ btn.disabled=false; btn.textContent='注册新账号'; } }
 };
 window.cloudLogin=async ()=>{
   const u=document.getElementById('clUser').value.trim(), p=document.getElementById('clPass').value;
   if(!u||!p) return toast('邮箱和密码都要填',true);
+  if(!window.cloudbase) return toast('CloudBase SDK 加载失败（检查网络能否访问 static.cloudbase.net）',true);
   const btn=document.getElementById('clLoginBtn'); if(btn){ btn.disabled=true; btn.textContent='登录中…'; }
   try{
-    const j=await cloudReq('POST','/auth/v1/token?grant_type=password',{email:u,password:p});
-    cloudSave({user:u, uid:j.user&&j.user.id, token:j.access_token});
+    if(!cloudSdkReady()) throw new Error('请先在设置里填 CloudBase 环境 ID');
+    const auth=cbAuth();
+    const ls=await auth.signInWithEmailAndPassword(u,p);
+    const uid=(ls&&ls.user&&(ls.user.uid||ls.user.openid))||'';
+    if(!uid) throw new Error('登录状态异常，未拿到用户 ID');
+    cloudSave({user:u, uid});
     toast('登录成功');
     cloudPull(true); closeModal(); renderAll();
-  }catch(e){ toast('登录失败：'+e.message,true); }
+  }catch(e){
+    let m=String(e&&e.message||e).slice(0,150);
+    if(/not exist|invalid|incorrect|password|unverified/i.test(m)) m='邮箱或密码不对（或还没点邮箱确认链接）';
+    toast('登录失败：'+m,true);
+  }
   finally{ if(btn){ btn.disabled=false; btn.textContent='登录'; } }
 };
 window.cloudLogout=()=>{
   askConfirm('退出登录？之后数据只存本机，不再自动同步。',()=>{
-    const c=cloudCfg(); delete c.token; delete c.user; delete c.uid; delete c.rowId; delete c.syncAt;
+    const auth=cbAuth(); if(auth) auth.signOut().catch(()=>{});
+    const c=cloudCfg(); delete c.user; delete c.uid; delete c.recId; delete c.syncAt;
     save('cloud',c); toast('已退出登录'); renderCloudStatus();
   });
 };
@@ -1114,20 +1110,17 @@ function cloudData(){ return { _app:'我的工作台', _ver:1, _at:new Date().to
   set:SET, cls:CLS, ddl:DDL, mat:MAT, note:NOTE, later:LATER, focus:FOCUS, mem:MEM, wallet:WALLET, expr:EXPR, habit:HABIT, diary:DIARY }; }
 window.cloudPush=async (silent)=>{
   if(!cloudOn() || cloudBusy || Date.now()-cloudDown<30000) return false;
-  const c=cloudCfg(); if(!c.uid) return false;
+  const c=cloudCfg();
   cloudBusy=true;
   try{
+    if(!cloudSdkReady()) throw new Error('SDK 未就绪');
+    const db=cbDb();
     const data=cloudData();
-    if(c.rowId){
-      // 更新已有行：PATCH 需要 Prefer: return=representation 拿回数据
-      await cloudReq('PATCH','/rest/v1/wb?user_id=eq.'+encodeURIComponent(c.uid),{data, updated_at:new Date().toISOString()},
-        {'Prefer':'return=minimal'});
+    if(c.recId){
+      await db.collection('wb').doc(c.recId).update({ data });
     }else{
-      // 插入新行（upsert on user_id，防并发重复）
-      const j=await cloudReq('POST','/rest/v1/wb?on_conflict=user_id',{user_id:c.uid, data, updated_at:new Date().toISOString()},
-        {'Prefer':'return=representation'});
-      const row=Array.isArray(j)?j[0]:j;
-      if(row && row.id) cloudSave({rowId:row.id});
+      const res=await db.collection('wb').add({ data });
+      if(res && res.id) cloudSave({recId:res.id});
     }
     cloudSave({syncAt:new Date().toISOString(), localAt:data._at});
     if(!silent) toast('☁ 已同步到云端');
@@ -1144,11 +1137,13 @@ window.cloudPush=async (silent)=>{
    - 本地没有 localAt（首次登录/换设备，本地只是默认数据）→ 信任云端，直接拉取 */
 window.cloudPull=async (manual)=>{
   if(!cloudOn() || cloudBusy) return false;
-  const c=cloudCfg(); if(!c.uid) return false;
+  const c=cloudCfg();
   cloudBusy=true;
   try{
-    const j=await cloudReq('GET','/rest/v1/wb?user_id=eq.'+encodeURIComponent(c.uid)+'&select=*&limit=1&order=updated_at.desc');
-    const rows=Array.isArray(j)?j:[];
+    if(!cloudSdkReady()) throw new Error('SDK 未就绪');
+    const db=cbDb();
+    const res=await db.collection('wb').where({ _openid:c.uid }).limit(1).get();
+    const rows=(res && res.data) || [];
     if(!rows.length){
       // 云端没记录 → 首次使用，把本地上传
       cloudBusy=false; await cloudPush(true);
@@ -1156,7 +1151,7 @@ window.cloudPull=async (manual)=>{
       return true;
     }
     const row=rows[0];
-    if(!c.rowId) cloudSave({rowId:row.id});
+    if(!c.recId) cloudSave({recId:row._id});
     const remote=row.data || {};
     // 关键：localAt 为空 = 首次登录/新设备，本地没有真实修改历史 → 直接信任云端
     if(!c.localAt){
@@ -1217,7 +1212,9 @@ function renderCloudStatus(){
   const el=document.getElementById('cloudTip');
   if(!el) return;
   if(cloudOn()) el.innerHTML=`<span style="color:var(--ok)">● 已登录：${esc(c.user)}</span> · 上次同步 ${c.syncAt?new Date(c.syncAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}):'—'}`;
-  else el.innerHTML='未登录（数据只存本机）。已内置云端配置：注册个邮箱账号登录后，课表/作业/记账/日记等自动备份云端。';
+  else if(!window.cloudbase) el.innerHTML='⚠ CloudBase SDK 加载失败（检查网络能否访问 static.cloudbase.net），云端同步暂不可用。';
+  else if(!c.env) el.innerHTML='未登录（数据只存本机）。先填下面「环境 ID」（腾讯云 CloudBase 控制台 → 环境概览里复制），保存后注册邮箱登录即可同步。';
+  else el.innerHTML='未登录（数据只存本机）。填好环境 ID 后，注册个邮箱账号登录，课表/作业/记账/日记等自动备份云端（国内稳定）。';
 }
 
 /* AI 数据同步：每次数据保存后 debounce 推送快照；服务不可用时冷却 30s 避免刷失败请求（不影响工作台）
@@ -2812,9 +2809,8 @@ window.openSettings=()=>{
       <div class="fld"><label>路上(分)</label><input id="sCm" type="number" min="0" max="180" value="${SET.commuteMin}"></div></div>
 
     <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">云端同步</div>
-    <div class="hint">登录后课表/作业/记账/日记等自动备份云端，换设备登录同一账号即可恢复。不登录=纯本地。**已内置默认云端，无需配置，直接注册邮箱即可用。**</div>
-    <div class="fld"><label>Supabase Project URL（默认已内置，可改）</label><input id="clUrl" value="${esc(cloudCfg().url||'')}" placeholder="https://xxxx.supabase.co"></div>
-    <div class="fld"><label>Supabase 可发布密钥（默认已内置，可改）</label><input id="clAnonKey" value="${esc(cloudCfg().anonKey||'')}" placeholder="sb_publishable_..."></div>
+    <div class="hint">登录后课表/作业/记账/日记等自动备份云端（腾讯云 CloudBase，国内访问稳定），换设备登录同一账号即可恢复。不登录=纯本地。</div>
+    <div class="fld"><label>CloudBase 环境 ID</label><input id="clEnv" value="${esc(cloudCfg().env||'')}" placeholder="如 my-workbench-1gxxxx"></div>
     <div id="cloudTip" style="font-size:12.5px;color:var(--sub);margin:8px 0;line-height:1.6"></div>
     <div class="row">
       <div class="fld" style="flex:1"><label>邮箱（登录账号）</label><input id="clUser" placeholder="name@example.com" autocomplete="off"></div>
@@ -2827,7 +2823,7 @@ window.openSettings=()=>{
       <button class="btn sm ghost" onclick="cloudPull(true)" id="clPullBtn">立即同步</button>
       <button class="btn sm ghost" onclick="cloudLogout()" id="clOutBtn">退出登录</button>
     </div>
-    <div class="hint">默认已内置云端配置，分享给朋友打开就能注册登录。只有想自建后端时才需要改这里的 URL/密钥（supabase.com 建项目 → SQL Editor 跑建表语句）。</div>
+    <div class="hint">首次使用：① 注册腾讯云（cloud.tencent.com，需实名）→ 开通 CloudBase 免费环境（自动送 3000 点/月）；② 控制台开启「邮箱登录」+ 把 fengmotian.github.io 加入「WEB 安全域名」；③ 创建数据库集合 wb 并配安全规则（仅创建者可读写）；④ 把环境 ID 填上面 → 保存 → 注册邮箱登录。详细教程见「云端同步配置指南.md」。</div>
 
     <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">课表（${CLS.length} 节）</div>
     <button class="btn sm block ghost" onclick="openCls()">编辑课表</button>
@@ -2850,18 +2846,11 @@ window.openSettings=()=>{
   renderCloudStatus();
 };
 window.cloudSaveCfg=()=>{
-  const url=document.getElementById('clUrl').value.trim();
-  const anonKey=document.getElementById('clAnonKey').value.trim();
+  const env=document.getElementById('clEnv').value.trim();
   const c=cloudCfg();
-  if(!url && !anonKey){
-    // 全空 → 清除本地配置，回退到内置默认
-    const cc=load('cloud',{}); delete cc.url; delete cc.anonKey; save('cloud',cc);
-    toast('已恢复内置默认云端配置');
-  } else {
-    if(!url||!anonKey) return toast('URL 和密钥要么都填、要么都留空（留空=用内置默认）',true);
-    cloudSave({url, anonKey});
-    toast('云端配置已保存'+(c.token?'（已登录）':'，填邮箱密码登录'));
-  }
+  if(!env) return toast('请填写 CloudBase 环境 ID（腾讯云 CloudBase 控制台 → 环境概览里复制）',true);
+  cloudSave({env});
+  toast('云端配置已保存'+(c.uid?'（已登录）':'，填邮箱密码注册/登录'));
   renderCloudStatus();
 };
 window.saveSettings=()=>{
