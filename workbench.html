@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F97316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>我的工作台</title>
+<style>
+:root{
+  /* 表面分层（暖米白底 → 白 → 暖浅橙） */
+  --bg:#FDF6EE; --surface-1:#FFFFFF; --surface-2:#FFFBF5; --surface-3:#FAF1E6; --well:#F3EFE9;
+  /* 品牌暖橙 + 青碧点缀 */
+  --brand:#F97316; --brand-2:#FF7A3D; --brand-ink:#C2410C; --brand-soft:#FFE8D6; --accent:#14B8A6;
+  /* 文字 4 级（暖调，对比度达标） */
+  --ink:#241A12; --sub:#5C5248; --muted:#857A6E; --faint:#B3A89B;
+  --line:#EFE7DB; --soft:#FFF1E6;
+  --warn:#D97706; --warn-soft:#FEF3C7; --danger:#E14B3B; --danger-soft:#FDE8E6;
+  --ok:#10B981; --ok-soft:#D1FAE5; --toast-bg:#0C0A09; --on-brand:#FFFFFF;
+  /* 圆角分层 */
+  --r-xs:8px; --r-sm:12px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-full:999px;
+  /* 阴影分层（双层柔和，禁廉价） */
+  --sh-xs:0 1px 2px rgba(60,40,20,.05),0 2px 8px rgba(60,40,20,.05);
+  --sh-sm:0 1px 2px rgba(60,40,20,.06),0 4px 16px rgba(60,40,20,.07);
+  --sh-md:0 2px 4px rgba(60,40,20,.06),0 8px 28px rgba(60,40,20,.10);
+  --sh-lg:0 4px 10px rgba(60,40,20,.08),0 16px 48px rgba(60,40,20,.14);
+  --sh-brand:0 2px 6px rgba(249,115,22,.20),0 10px 30px rgba(249,115,22,.26);   /* 品牌微光 */
+  /* 间距基准 4/8pt */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px; --sp-8:32px;
+  /* 兼容别名（修复 --text 未定义 bug + 老代码过渡） */
+  --card:var(--surface-1); --text:var(--ink); --r:var(--r-md); --r-sm:12px; --sh:var(--sh-sm);
+  /* 动效曲线与时长 */
+  --ease-spring:cubic-bezier(.34,1.56,.64,1); --ease-standard:cubic-bezier(.2,0,0,1);
+  --dur-fast:150ms; --dur-mid:250ms; --dur-slow:350ms;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12100E; --surface-1:#1C1917; --surface-2:#23201C; --surface-3:#29251F; --well:#2A2722;
+    --brand:#FB923C; --brand-2:#FDBA74; --brand-ink:#FFEDD5; --brand-soft:rgba(249,115,22,.18); --accent:#2DD4BF;
+    --ink:#F4F1EC; --sub:#C9C2B8; --muted:#9A9185; --faint:#6E675C;
+    --line:#3A342C; --soft:rgba(249,115,22,.14);
+    --warn:#FBBF24; --warn-soft:rgba(217,119,6,.18); --danger:#F87171; --danger-soft:rgba(225,75,59,.16);
+    --ok:#34D399; --ok-soft:rgba(16,185,129,.16); --on-brand:#1E2330;
+    --sh-xs:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.35);
+    --sh-sm:0 1px 2px rgba(0,0,0,.45),0 4px 16px rgba(0,0,0,.4);
+    --sh-md:0 2px 4px rgba(0,0,0,.5),0 8px 28px rgba(0,0,0,.5);
+    --sh-lg:0 4px 10px rgba(0,0,0,.55),0 16px 48px rgba(0,0,0,.6);
+    --sh-brand:0 2px 6px rgba(249,115,22,.28),0 10px 30px rgba(249,115,22,.34);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.55;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:16px;color:inherit}
+svg{display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 14px}
+.hide{display:none !important}
+
+/* ---------- 通用卡片 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);transition:box-shadow var(--dur-mid) var(--ease-standard),transform var(--dur-mid) var(--ease-spring)}
+.card:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+.zone{margin-top:14px}
+.zone-hd{display:flex;align-items:center;gap:9px;padding:4px 4px 10px}
+.zone-hd h2{margin:0;font-size:16px;font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+.zone-hd h2::before{content:"";width:4px;height:15px;border-radius:3px;background:linear-gradient(180deg,var(--brand),var(--brand-2));display:inline-block}
+.zone-hd .tagline{font-size:12px;color:var(--muted);font-weight:400}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1.1fr 1fr 1fr}
+
+/* 折叠块 */
+.fold{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden;transition:box-shadow var(--dur-mid) var(--ease-standard)}
+.fold>summary{list-style:none;cursor:pointer;padding:13px 15px;display:flex;align-items:center;gap:9px;font-weight:600;font-size:14px;min-height:46px;transition:background var(--dur-fast) ease}
+.fold>summary:hover{background:var(--surface-2)}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary .chev{margin-left:auto;transition:transform .18s;color:var(--faint)}
+.fold[open]>summary .chev{transform:rotate(180deg)}
+.fold>summary .cnt{font-size:12px;font-weight:600;color:var(--brand);background:var(--soft);padding:2px 8px;border-radius:20px}
+.fold-body{padding:0 15px 15px;border-top:1px solid var(--line);padding-top:13px}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 15px;border-radius:var(--r-sm);background:var(--soft);color:var(--brand);font-weight:600;font-size:14px;transition:filter var(--dur-fast) ease,transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast) ease,background var(--dur-fast) ease,border-color var(--dur-fast) ease}
+.btn:hover{background:var(--brand-soft);filter:brightness(1.02)}
+.btn:active{filter:brightness(.95);transform:scale(.97)}
+.btn.pri{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));color:var(--on-brand);box-shadow:var(--sh-brand)
+}
+.btn.pri::after{content:"";position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transition:left .65s ease;pointer-events:none}
+.btn.pri:hover::after{left:120%}
+.btn.pri:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 4px 10px rgba(249,115,22,.24),0 14px 36px rgba(249,115,22,.3)}
+.btn.pri:active{transform:translateY(0) scale(.97)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--sub)}
+.btn.ghost:hover{background:var(--soft);border-color:var(--brand-soft);color:var(--brand)}
+.btn.dgr{background:var(--danger-soft);color:var(--danger)}
+.btn.dgr:hover{filter:brightness(.96)}
+/* LLM 设置面板：双 Tab */
+.llm-tabs{display:flex;gap:6px;margin:8px 0 14px;background:var(--soft);padding:4px;border-radius:10px}
+.llm-tabs .llm-tab{flex:1;min-height:34px;background:transparent;color:var(--sub);box-shadow:none;font-weight:700}
+.llm-tabs .llm-tab.on{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:var(--on-brand);box-shadow:var(--sh-brand)}
+.btn.sm{min-height:34px;padding:0 11px;font-size:13px;border-radius:var(--r-xs)}
+.btn.block{width:100%}
+.iconbtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-sm);color:var(--sub);transition:background var(--dur-fast) ease,color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-spring)}
+.iconbtn:hover{background:var(--soft);color:var(--brand)}
+.iconbtn:active{background:var(--soft);transform:scale(.92)}
+
+/* 表单 */
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.fld label{font-size:12px;color:var(--sub);font-weight:600}
+.fld input,.fld textarea,.fld select{
+  width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:var(--r-sm);background:var(--surface-2);color:var(--ink);outline:none;transition:border-color var(--dur-fast) ease,box-shadow var(--dur-fast) ease,background var(--dur-fast) ease
+}
+.fld textarea{min-height:80px;resize:vertical;line-height:1.6}
+.fld input::placeholder,.fld textarea::placeholder{color:var(--faint)}
+.fld input:focus,.fld textarea:focus,.fld select:focus{border-color:var(--brand);background:var(--surface-1);box-shadow:0 0 0 3px rgba(249,115,22,.14)}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--soft);color:var(--brand)}
+.pill.red{background:var(--danger-soft);color:var(--danger)}
+.pill.org{background:var(--warn-soft);color:#B45309}
+.pill.grn{background:var(--ok-soft);color:#047857}
+.pill.gry{background:var(--well);color:var(--muted)}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 12px}
+
+/* ---------- 顶部状态栏（常驻） ---------- */
+#topbar{position:sticky;top:0;z-index:60;background:rgba(253,246,238,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+@media (prefers-color-scheme:dark){#topbar{background:rgba(18,16,14,.82)}}
+.tb{display:flex;align-items:center;gap:10px;padding:9px 0}
+.tb-brand{flex:0 0 auto;font-size:15px;font-weight:800;white-space:nowrap;letter-spacing:.3px;
+  background:linear-gradient(120deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.tb-stats{display:flex;gap:8px;align-items:stretch;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.tb-stats::-webkit-scrollbar{display:none}
+.tb-item{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:7px 11px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);text-align:left;min-height:44px;min-width:0;transition:box-shadow var(--dur-fast) ease,transform var(--dur-fast) var(--ease-spring),background var(--dur-fast) ease,border-color var(--dur-fast) ease}
+.tb-item:hover{background:var(--surface-2);transform:translateY(-1px);box-shadow:var(--sh-xs)}
+.tb-item:active{background:var(--soft)}
+.tb-item.on{border-color:var(--brand);background:var(--soft);box-shadow:inset 0 0 0 1px var(--brand)}
+.tb-ico{flex:0 0 auto;color:var(--brand)}
+.tb-tx{min-width:0}
+.tb-tx b{display:block;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-tx span{display:block;font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-item.exam{border-color:var(--danger);background:var(--danger-soft)}
+.tb-item.exam .tb-ico,.tb-item.exam .tb-tx b{color:var(--danger)}
+.tb-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh-sm)}
+
+/* 周历格子 */
+.weeks{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:10px}
+.wk{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:11px;font-weight:700;background:var(--well);color:var(--faint)}
+.wk.past{background:#E8EAF0;color:#B6BAC6}
+.wk.now{background:var(--brand);color:var(--on-brand);box-shadow:0 0 0 3px var(--soft)}
+.wk.exam{background:var(--danger-soft);color:var(--danger);outline:1.5px solid var(--danger)}
+.wk.now.exam{background:var(--danger);color:var(--on-brand);outline:none;box-shadow:0 0 0 3px var(--danger-soft)}
+
+/* ---------- 今天要处理 ---------- */
+#today{margin-top:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:var(--r);box-shadow:var(--sh-md);padding:13px 15px;transition:box-shadow var(--dur-mid) var(--ease-standard),transform var(--dur-mid) var(--ease-spring)}
+#today:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+#pomo{box-shadow:var(--sh-md)}
+#today.hasOverdue{border-left-color:var(--danger)}
+#today h3{margin:0 0 10px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
+.tditem{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.tditem:first-of-type{border-top:none}
+.tddot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--brand)}
+.tddot.red{background:var(--danger)}.tddot.org{background:var(--warn)}.tddot.gry{background:var(--faint)}
+.tdtx{flex:1;min-width:0}
+.tdtx b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tdtx span{font-size:12px;color:var(--sub)}
+.tdtx span.red{color:var(--danger);font-weight:700}
+
+/* ---------- 备份条 ---------- */
+#backup{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;box-shadow:var(--sh)}
+#backup .use{margin-left:auto;font-size:11.5px;color:var(--faint)}
+#nudge{margin-top:10px;background:var(--warn-soft);color:#92400E;border-radius:var(--r-sm);padding:10px 13px;font-size:13px;display:flex;align-items:center;gap:8px}
+
+/* ---------- 下一节课卡（常驻） ---------- */
+#nextCls{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:var(--on-brand);border-radius:var(--r);padding:16px;box-shadow:var(--sh-brand)}
+#nextCls .lbl{font-size:11.5px;opacity:.85;font-weight:600;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+#nextCls .nm{font-size:21px;font-weight:800;margin:7px 0 3px;line-height:1.25}
+#nextCls .mt{font-size:13px;opacity:.9}
+#nextCls .cd{margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.22);font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#nextCls .cd b{font-size:17px;font-variant-numeric:tabular-nums}
+
+/* 今日课表 */
+.slot{display:flex;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
+.slot:first-child{border-top:none;padding-top:0}
+.slot .tm{flex:0 0 52px;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;line-height:1.4}
+.slot .tm b{display:block;color:var(--ink);font-size:13px}
+.slot .bd{flex:1;min-width:0}
+.slot .bd b{font-size:14px;font-weight:600}
+.slot .bd span{display:block;font-size:12px;color:var(--sub)}
+.slot.done{opacity:.42}
+.slot.live .bd b{color:var(--brand)}
+.slot.live{background:var(--soft);margin:0 -10px;padding:10px;border-radius:10px;border-top:none}
+
+/* 作业 DDL */
+.ddl{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--line)}
+.ddl:first-child{border-top:none}
+.ddl .ck{flex:0 0 auto;width:44px;height:44px;margin:-8px 0 -8px -10px;display:flex;align-items:center;justify-content:center}
+.ddl .box{width:20px;height:20px;border:2px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;color:transparent}
+.ddl.done .box{background:var(--ok);border-color:var(--ok);color:#fff}
+.ddl .bd{flex:1;min-width:0}
+.ddl .bd b{display:block;font-size:14px;font-weight:600}
+.ddl.done .bd b{text-decoration:line-through;color:var(--faint)}
+.ddl .bd span{font-size:12px;color:var(--sub)}
+.ddl .cd{flex:0 0 auto;text-align:right}
+.ddl .cd b{display:block;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.ddl .cd span{font-size:10.5px;color:var(--faint)}
+.ddl.d-red .cd b{color:var(--danger)}
+.ddl.d-org .cd b{color:var(--warn)}
+.ddl.d-ok .cd b{color:var(--ok)}
+
+/* 资料索引 */
+.mgrp{border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:9px;overflow:hidden}
+.mgrp>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;background:var(--surface-2);min-height:44px}
+.mgrp>summary::-webkit-details-marker{display:none}
+.mitem{display:flex;align-items:center;gap:9px;padding:9px 12px;border-top:1px solid var(--line);font-size:13px}
+.mitem .bd{flex:1;min-width:0}
+.mitem .bd b{display:block;font-weight:500;word-break:break-all}
+.mitem .bd span{font-size:11.5px;color:var(--faint);word-break:break-all}
+.mt-PPT{background:#FEF3C7;color:#B45309}.mt-录播{background:#DBEAFE;color:#1D4ED8}
+.mt-PDF{background:#FEE2E2;color:#B91C1C}.mt-其他{background:var(--well);color:var(--sub)}
+
+/* ---------- 专注 ---------- */
+#pomo{text-align:center;padding:18px 15px}
+#pomoRing{margin:0 auto}
+#pomoTime{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:1px}
+#pomoState{font-size:12.5px;color:var(--sub);margin-top:2px}
+.noise{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:13px}
+.noise button{padding:7px 12px;border-radius:20px;background:var(--well);color:var(--sub);font-size:12.5px;font-weight:600;min-height:36px}
+.noise button.on{background:var(--brand);color:var(--on-brand)}
+.scoreRow{display:flex;gap:12px;align-items:center}
+.bars{display:flex;gap:5px;align-items:flex-end;height:60px;flex:1}
+.bar{flex:1;background:var(--soft);border-radius:4px 4px 0 0;position:relative;min-height:3px}
+.bar i{position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:10px;color:var(--faint);font-style:normal}
+
+/* 专注全屏遮罩 */
+#focusOv{position:fixed;inset:0;z-index:200;background:#141826;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px}
+#focusOv .big{font-size:clamp(56px,17vw,110px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:2px;line-height:1}
+#focusOv .sub{color:#9BA3B8;font-size:14px;text-align:center;max-width:340px}
+#focusOv .acts{display:flex;gap:10px;margin-top:8px}
+#focusOv .acts .btn{background:rgba(255,255,255,.12);color:#fff}
+#focusOv .acts .btn.pri{background:#fff;color:#141826}
+#focusOv .dis{font-size:12.5px;color:#F59E0B}
+
+/* 笔记 */
+.note{padding:11px 0;border-top:1px solid var(--line);display:flex;gap:10px}
+.note:first-child{border-top:none}
+.note .bd{flex:1;min-width:0}
+.note .bd p{margin:0;font-size:14px;white-space:pre-wrap;word-break:break-word}
+.note .bd time{font-size:11px;color:var(--faint)}
+.note img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:0 0 auto;cursor:zoom-in;border:1px solid var(--line)}
+#shot{width:100%;max-height:200px;object-fit:contain;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface-2);margin-bottom:10px}
+
+/* ---------- 稍后处理 ---------- */
+#later{margin-top:14px}
+.lt{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
+.lt:first-child{border-top:none}
+.lt .bd{flex:1;min-width:0}
+.lt .bd b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt .bd span{font-size:11.5px;color:var(--faint)}
+.lt.long{opacity:.5}
+.lt.long .bd b{color:var(--faint);font-weight:500}
+.lt.done{opacity:.34}
+.lt.done .bd b{text-decoration:line-through}
+
+/* ---------- AI 悬浮球 ---------- */
+#orb{position:fixed;z-index:300;width:58px;height:58px;border-radius:50%;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));box-shadow:var(--sh-brand);
+  display:flex;align-items:center;justify-content:center;color:var(--on-brand);touch-action:none;user-select:none;transition:box-shadow .2s,transform .2s var(--ease-spring)}
+#orb:active{box-shadow:0 3px 12px rgba(249,115,22,.5);transform:scale(.95)}
+#orb:hover{transform:scale(1.06)}
+#orb.pulse{animation:pulse 1.7s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:var(--sh-brand)}50%{box-shadow:0 2px 6px rgba(249,115,22,.18),0 10px 30px rgba(249,115,22,.22),0 0 0 12px rgba(249,115,22,.10)}}
+#orbDot{position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;background:var(--danger);border:2px solid #fff}
+#bubble{position:fixed;z-index:299;max-width:230px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:10px 13px;font-size:13px;box-shadow:var(--sh-md);line-height:1.5}
+#bubble b{color:var(--brand)}
+#panel{position:fixed;z-index:301;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));width:min(360px,calc(100vw - 28px));
+  max-height:min(560px,72vh);background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--sh-lg);display:flex;flex-direction:column;overflow:hidden}
+#panel .ph{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line);flex:0 0 auto}
+#panel .ph b{font-size:14.5px}
+#panel .ph small{font-size:11px;color:var(--faint);display:block;font-weight:400}
+#chat{flex:1;overflow-y:auto;padding:13px 14px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
+.msg{max-width:84%;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.msg.a{align-self:flex-start;background:var(--well);border-bottom-left-radius:5px}
+.msg.u{align-self:flex-end;background:var(--brand);color:var(--on-brand);border-bottom-right-radius:5px}
+#pin{display:flex;gap:7px;padding:10px 12px;border-top:1px solid var(--line);align-items:flex-end;flex:0 0 auto;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+#pin textarea{flex:1;min-height:44px;max-height:96px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;resize:none;background:var(--surface-1);color:var(--ink);outline:none;line-height:1.4}
+#pin textarea::placeholder{color:var(--faint)}
+#pin textarea:focus{border-color:var(--brand);background:var(--surface-1);box-shadow:0 0 0 3px rgba(249,115,22,.14)}
+#micBtn.rec{background:var(--danger);color:#fff;animation:pulse2 1.1s infinite}
+@keyframes pulse2{50%{opacity:.6}}
+
+/* 弹层 */
+.mask{position:fixed;inset:0;z-index:400;background:rgba(23,26,58,.44);display:flex;align-items:flex-end;justify-content:center;padding:0;animation:fadeIn .2s ease both}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:var(--r-lg) var(--r-lg) 0 0;max-height:88vh;overflow-y:auto;padding:18px 18px calc(18px + env(safe-area-inset-bottom));animation:riseIn .28s var(--ease-spring) both}
+.sheet h3{margin:0 0 14px;font-size:17px;display:flex;align-items:center;gap:8px}
+.sheet h3 .iconbtn{margin-left:auto;margin-right:-8px}
+.hint{font-size:12px;color:var(--faint);line-height:1.6;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;margin:10px 0}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+@media(min-width:769px){
+  .mask{align-items:center}
+  .sheet{border-radius:var(--r-xl);max-height:84vh}
+}
+@media(max-width:768px){
+  .g2,.g3{grid-template-columns:1fr}
+  .tb-brand{font-size:13.5px}
+  .tb-stats{flex:0 0 auto;max-width:100%}
+  #pomoTime{font-size:30px}
+  .wrap{padding:0 11px}
+}
+@media(max-width:420px){
+  .weeks{grid-template-columns:repeat(5,1fr)}
+}
+
+/* ---------- 布局重构（V3）：分区 tab + 列表限高 ---------- */
+.tabs{display:flex;gap:6px;margin:2px 0 12px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;background:var(--surface-3);border:1px solid var(--line);border-radius:var(--r-md);padding:5px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:9px 18px;border-radius:var(--r-sm);border:none;background:transparent;font-size:13.5px;font-weight:600;color:var(--sub);cursor:pointer;min-height:40px;white-space:nowrap;text-align:center;transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform var(--dur-fast) var(--ease-spring)}
+.tab:hover{background:var(--soft);color:var(--brand)}
+.tab:active{transform:scale(.97)}
+.tab.on{background:#fff;color:var(--brand-ink);box-shadow:0 1px 3px rgba(30,35,48,.06),0 2px 10px rgba(249,115,22,.12),inset 0 0 0 1px var(--brand-soft)}
+@media(min-width:769px){
+  .tabs .tab{flex:1}
+  .tab{text-align:center}
+}
+#ddlList,#matList,#noteList,#walList,#exList,#habitList,#laterList{max-height:52vh;overflow-y:auto;padding-right:3px}
+
+/* ---------- 生活辅助（V2） ---------- */
+.seg{display:flex;gap:6px}
+.seg button{flex:1}
+.wal-left{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.wl{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.wl:first-child{border-top:none}
+.wl .bd{flex:1;min-width:0}
+.wl .bd b{font-size:14px;font-weight:600}
+.wl .bd span{font-size:11.5px;color:var(--faint)}
+.wl .amt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wl .amt.exp{color:var(--danger)}
+.wl .amt.inc{color:var(--ok)}
+.wl .cat{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--soft);color:var(--brand);margin-right:5px}
+.wl .cat.餐饮{background:#FEF3C7;color:#B45309}.wl .cat.交通{background:#DBEAFE;color:#1D4ED8}
+.wl .cat.购物{background:#FCE7F3;color:#9D174D}.wl .cat.娱乐{background:#EDE9FE;color:#5B21B6}
+.wl .cat.学习{background:#D1FAE5;color:#047857}.wl .cat.其他{background:var(--well);color:var(--sub)}
+.ex{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.ex:first-child{border-top:none}
+.ex.got{opacity:.45}
+.ex .bd{flex:1;min-width:0}
+.ex .code{font-size:17px;font-weight:800;letter-spacing:.5px;font-variant-numeric:tabular-nums;word-break:break-all}
+.ex.got .code{text-decoration:line-through;color:var(--faint)}
+.ex .meta{font-size:11.5px;color:var(--sub);margin-top:2px;word-break:break-all}
+.ex .due{font-size:11px;margin-top:3px}
+.ex .due.red{color:var(--danger);font-weight:700}
+.ex .due.org{color:var(--warn);font-weight:700}
+.cp{font-size:12px;font-weight:700;color:var(--brand);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--soft);min-height:34px}
+#wMic.rec{background:var(--danger);color:#fff}
+
+/* ---------- 习惯打卡（V2-b） ---------- */
+.hgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:4px;place-items:center}
+.hcell{width:52px;height:52px;border-radius:var(--r-full);background:var(--well);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--muted);box-sizing:border-box}
+.habit{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.habit:first-child{border-top:none}
+.hdot{flex:0 0 auto;width:11px;height:11px;border-radius:50%}
+.habit .bd{flex:1;min-width:0}
+.habit .bd b{font-size:14px;font-weight:600}
+.habit .bd span{font-size:11.5px;color:var(--sub)}
+.habit .ck{flex:0 0 auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.habit .box{width:22px;height:22px;border:2px solid var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff}
+.habit .ck.on .box{background:var(--brand);border-color:var(--brand)}
+.habit .ck.off{opacity:.45}
+.wbadge{font-style:normal;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--soft);color:var(--brand);margin-left:6px;vertical-align:1px}
+.hlegend{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--faint);margin-top:9px}
+.hlegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* ---------- 微动效（V4 视觉升级） ---------- */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes tabPop{from{transform:scale(.95)}to{transform:scale(1)}}
+@keyframes ripple{to{transform:scale(2.4);opacity:0}}
+.tabpane>*{animation:fadeUp .35s ease both}
+.tabpane>*:nth-child(2){animation-delay:.05s}
+.tabpane>*:nth-child(3){animation-delay:.1s}
+.tab.on{animation:tabPop .22s var(--ease-spring) both}
+
+/* 列表项按压反馈（:where 降低优先级，避免覆盖已有 .btn/.iconbtn 等精细规则） */
+:where(.slot,.ddl,.lt,.wl,.ex,.habit,.note,.mitem,.wk,.hcell,.pill,.ck):active{filter:brightness(.95);transform:scale(.98)}
+
+/* 涟漪 */
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.35);pointer-events:none;transform:scale(0);animation:ripple .6s ease-out}
+@media (prefers-color-scheme:dark){.ripple{background:rgba(255,255,255,.22)}}
+
+/* 数字 tabular-nums（避免抖动） */
+.pomoTime,.walLeft,.scoreNum,.walPct,pomoTimeSvg{font-variant-numeric:tabular-nums}
+
+/* 折叠块展开过渡（渐进增强） */
+@supports (interpolate-size:allow-keywords){
+  .fold,.fold-body{interpolate-size:allow-keywords}
+  .fold .fold-body{overflow:hidden;transition:height var(--dur-mid) var(--ease-standard)}
+}
+
+/* toast 退场 */
+.toast-out{animation:toastOut .22s ease both}
+@keyframes toastOut{to{opacity:0;transform:translate(-50%,10px)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* 骨架屏 */
+#skeleton{position:fixed;inset:0;z-index:900;background:var(--bg);padding:14px;pointer-events:none;transition:opacity .25s ease}
+#skeleton.done{opacity:0}
+.sk{background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<!-- 启动骨架屏（shimmer 占位，渲染完成后 fadeOut 移除；pointer-events:none 不影响交互与探针） -->
+<div id="skeleton" aria-hidden="true">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+    <div class="sk" style="width:120px;height:30px"></div>
+    <div style="flex:1;display:flex;gap:8px;overflow:hidden">
+      <div class="sk" style="width:140px;height:44px"></div>
+      <div class="sk" style="width:140px;height:44px"></div>
+      <div class="sk" style="width:140px;height:44px"></div>
+      <div class="sk" style="width:140px;height:44px"></div>
+    </div>
+  </div>
+  <div class="sk" style="height:58px;margin-bottom:12px"></div>
+  <div class="sk" style="height:80px;margin-bottom:12px"></div>
+  <div class="grid g2">
+    <div class="sk" style="height:160px"></div>
+    <div class="sk" style="height:160px"></div>
+  </div>
+</div>
+
+<!-- ============ 顶部状态栏（常驻） ============ -->
+<div id="topbar"><div class="wrap">
+  <div class="tb">
+    <span class="tb-brand">小墨工作台<em style="font-style:normal;font-size:10px;font-weight:700;margin-left:5px;padding:1px 6px;border-radius:8px;background:var(--soft);color:var(--brand);vertical-align:2px">v1.6</em></span>
+    <div class="tb-stats">
+      <button class="tb-item" id="tbClock" onclick="togglePanel('pTime',this)"></button>
+      <button class="tb-item" id="tbWx" onclick="togglePanel('pWx',this)"></button>
+      <button class="tb-item" id="tbWeek" onclick="togglePanel('pWeek',this)"></button>
+      <button class="tb-item" id="tbSleep" onclick="togglePanel('pSleep',this)"></button>
+      <button class="iconbtn" onclick="openSettings()" aria-label="设置" style="flex:0 0 44px;background:var(--card);border:1px solid var(--line);border-radius:12px"></button>
+    </div>
+  </div>
+</div></div>
+
+<div class="wrap">
+  <div id="pWeek" class="tb-panel hide"></div>
+  <div id="pWx" class="tb-panel hide"></div>
+  <div id="pSleep" class="tb-panel hide"></div>
+  <div id="pTime" class="tb-panel hide"></div>
+
+  <!-- ============ 数据备份（全局常驻） ============ -->
+  <div id="backup">
+    <button class="btn sm" onclick="exportJSON()">导出 JSON 备份</button>
+    <button class="btn sm ghost" onclick="fileIn.click()">导入恢复</button>
+    <button class="btn sm ghost" onclick="clearSeed()">清空示例数据</button>
+    <button class="btn sm dgr" onclick="wipeAll()">清空全部</button>
+    <span class="use" id="useTip"></span>
+    <input type="file" id="fileIn" accept="application/json,.json" class="hide" onchange="importJSON(this)">
+  </div>
+  <div id="nudge" class="hide"></div>
+
+  <!-- ============ 分区导航 ============ -->
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-tab="overview" onclick="switchTab('overview')">概览</button>
+    <button class="tab" data-tab="study" onclick="switchTab('study')">学习</button>
+    <button class="tab" data-tab="focus" onclick="switchTab('focus')">专注</button>
+    <button class="tab" data-tab="life" onclick="switchTab('life')">生活</button>
+    <button class="tab" data-tab="habit" onclick="switchTab('habit')">习惯</button>
+    <button class="tab" data-tab="diary" onclick="switchTab('diary')">日记</button>
+  </nav>
+
+  <!-- ============ 概览：今天要处理 + 下一节课 + 今日课表 ============ -->
+  <div class="tabpane" id="pane-overview">
+    <section id="today"></section>
+
+    <section class="zone">
+      <div class="zone-hd"><h2>今天</h2><span class="tagline">下一节课 · 今日课表</span></div>
+      <div class="grid g2">
+        <div id="nextCls"></div>
+        <details class="fold" id="fToday" open>
+          <summary><span id="i2"></span>今日课表 <span class="cnt" id="cToday">0</span><span class="chev" id="i3"></span></summary>
+          <div class="fold-body" id="todaySlots"></div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ 学习：作业 DDL + 资料索引 ============ -->
+  <div class="tabpane hide" id="pane-study">
+    <section class="zone">
+      <div class="zone-hd"><h2>学习</h2><span class="tagline">作业倒计时 · 课程资料</span></div>
+      <details class="fold" id="fDdl" open>
+        <summary><span id="i4"></span>作业 DDL 倒计时 <span class="cnt" id="cDdl">0</span>
+          <span class="chev" id="i5"></span></summary>
+        <div class="fold-body">
+          <div id="ddlList"></div>
+          <button class="btn sm block" style="margin-top:11px" onclick="openDdl()">+ 添加作业</button>
+        </div>
+      </details>
+
+      <details class="fold" id="fMat" style="margin-top:12px">
+        <summary><span id="i6"></span>课程资料索引 <span class="cnt" id="cMat">0</span><span class="chev" id="i7"></span></summary>
+        <div class="fold-body">
+          <div id="matList"></div>
+          <button class="btn sm block" style="margin-top:11px" onclick="openMat()">+ 添加资料</button>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <!-- ============ 专注 tab：番茄钟 + 评分 + 笔记 ============ -->
+  <div class="tabpane hide" id="pane-focus">
+  <section class="zone">
+    <div class="zone-hd"><h2>专注</h2><span class="tagline">番茄钟 · 白噪音 · 笔记</span></div>
+    <div class="grid g2">
+      <div class="card" id="pomo">
+        <svg id="pomoRing" width="150" height="150" viewBox="0 0 150 150">
+          <circle cx="75" cy="75" r="66" fill="none" stroke="var(--soft)" stroke-width="11"/>
+          <circle id="ringFg" cx="75" cy="75" r="66" fill="none" stroke="var(--brand)" stroke-width="11"
+                  stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="0"
+                  transform="rotate(-90 75 75)"/>
+          <text id="pomoTimeSvg" x="75" y="72" text-anchor="middle" font-size="30" font-weight="800"
+                fill="var(--ink)" font-family="-apple-system,Segoe UI,sans-serif">25:00</text>
+          <text id="pomoStSvg" x="75" y="94" text-anchor="middle" font-size="12" fill="var(--sub)"
+                font-family="-apple-system,Segoe UI,sans-serif">准备开始</text>
+        </svg>
+        <div class="row" style="margin-top:14px;justify-content:center">
+          <button class="btn ghost sm" onclick="setPlan(-5)">−5 分</button>
+          <button class="btn pri" id="pomoBtn" onclick="pomoStart()" style="flex:2">开始专注</button>
+          <button class="btn ghost sm" onclick="setPlan(5)">+5 分</button>
+        </div>
+        <div class="noise" id="noiseBar"></div>
+        <div class="hint" style="text-align:left;margin-top:12px">
+          免打扰 = 全屏专注遮罩 + 离开页面自动计入分心。
+          <b>浏览器无法屏蔽微信/系统通知</b>，手机请同时开系统「勿扰模式」。
+        </div>
+      </div>
+
+      <div class="card" style="padding:15px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span id="i9"></span><b style="font-size:14px">本地专注质量评分</b>
+        </div>
+        <div class="scoreRow">
+          <svg width="88" height="88" viewBox="0 0 88 88" style="flex:0 0 auto">
+            <circle cx="44" cy="44" r="38" fill="none" stroke="var(--soft)" stroke-width="8"/>
+            <circle id="scoreArc" cx="44" cy="44" r="38" fill="none" stroke="#10B981" stroke-width="8"
+                    stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="238.8"
+                    transform="rotate(-90 44 44)"/>
+            <text id="scoreNum" x="44" y="49" text-anchor="middle" font-size="23" font-weight="800"
+                  fill="var(--ink)" font-family="-apple-system,sans-serif">—</text>
+          </svg>
+          <div style="flex:1;min-width:0">
+            <div id="scoreTx" style="font-size:13px;color:var(--sub);line-height:1.6"></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;font-size:12px;color:var(--sub);font-weight:600">近 7 天专注分钟</div>
+        <div class="bars" id="bars" style="margin-top:9px"></div>
+        <div style="height:18px"></div>
+      </div>
+    </div>
+
+    <details class="fold" id="fNote" style="margin-top:12px">
+      <summary><span id="i10"></span>极简笔记 · 拍图存档 <span class="cnt" id="cNote">0</span><span class="chev" id="i11"></span></summary>
+      <div class="fold-body">
+        <img id="shot" class="hide" alt="待存档图片预览">
+        <div class="fld" style="margin-bottom:8px">
+          <textarea id="noteTx" placeholder="随手记一句…（拍图后可在这里手打图上的关键内容）"></textarea>
+        </div>
+        <div class="row" style="margin-bottom:12px">
+          <button class="btn sm" onclick="camIn.click()" style="flex:0 0 auto">拍照 / 选图</button>
+          <button class="btn sm ghost hide" id="dropShot" onclick="dropShot()" style="flex:0 0 auto">移除图片</button>
+          <button class="btn sm pri" onclick="addNote()">保存</button>
+        </div>
+        <input type="file" id="camIn" accept="image/*" capture="environment" class="hide" onchange="pickShot(this)">
+        <div id="noteList"></div>
+      </div>
+    </details>
+  </section>
+  </div>
+
+  <!-- ============ 生活 tab：生活费 + 快递 + 稍后处理 ============ -->
+  <div class="tabpane hide" id="pane-life">
+  <section class="zone">
+    <div class="zone-hd"><h2>生活</h2><span class="tagline">生活费 · 快递 · 待读</span></div>
+    <div class="grid g2">
+      <!-- 生活费余额 -->
+      <div class="card" style="padding:15px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span id="i18"></span><b style="font-size:14px">生活费余额</b>
+          <span class="pill grn" id="walBud" style="margin-left:auto">月预算 ¥0</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+          <svg width="84" height="84" viewBox="0 0 88 88" style="flex:0 0 auto">
+            <circle cx="44" cy="44" r="38" fill="none" stroke="var(--soft)" stroke-width="8"/>
+            <circle id="walArc" cx="44" cy="44" r="38" fill="none" stroke="var(--brand)" stroke-width="8"
+                    stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="238.8"
+                    transform="rotate(-90 44 44)"/>
+            <text id="walPct" x="44" y="49" text-anchor="middle" font-size="21" font-weight="800"
+                  fill="var(--ink)" font-family="-apple-system,sans-serif">0%</text>
+          </svg>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:var(--sub)">本月剩余可用</div>
+            <div class="wal-left" id="walLeft">¥0</div>
+            <div style="font-size:11.5px;color:var(--faint)" id="walSub">已花 ¥0 / 预算 ¥0</div>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom:9px">
+          <div class="seg" style="flex:2">
+            <button class="btn sm pri" id="wSegExp" onclick="walType('exp')">支出</button>
+            <button class="btn sm ghost" id="wSegInc" onclick="walType('inc')">收入</button>
+          </div>
+          <button class="btn sm ghost" id="wMic" onclick="walletMic()" style="flex:0 0 auto">语音记账</button>
+        </div>
+        <div class="row" style="margin-bottom:8px">
+          <input id="wAmt" type="number" inputmode="decimal" placeholder="金额 ¥" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);flex:1">
+          <select id="wCat" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);flex:1.2">
+            <option>餐饮</option><option>交通</option><option>购物</option><option>娱乐</option><option>学习</option><option>其他</option>
+          </select>
+        </div>
+        <input id="wNote" placeholder="备注（如：食堂午饭）" style="width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);margin-bottom:10px">
+        <button class="btn pri block" onclick="addWallet()">记一笔</button>
+        <div id="walList" style="margin-top:6px"></div>
+      </div>
+
+      <!-- 快递取件码 -->
+      <div class="card" style="padding:15px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span id="i19"></span><b style="font-size:14px">快递取件码</b>
+          <span class="pill" id="exCnt" style="margin-left:auto">0 待取</span>
+        </div>
+        <div class="row" style="margin-bottom:8px">
+          <select id="eCo" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);flex:1">
+            <option>顺丰</option><option>京东</option><option>中通</option><option>圆通</option><option>韵达</option><option>申通</option><option>邮政</option><option>菜鸟/其他</option>
+          </select>
+          <input id="eCode" placeholder="取件码 如 H3-2-1234" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);flex:1.6">
+        </div>
+        <div class="row" style="margin-bottom:8px">
+          <input id="eLoc" placeholder="位置 如 菜鸟驿站3号柜" style="flex:2;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">
+          <input id="eDue" type="date" placeholder="取件截止" style="flex:1;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">
+        </div>
+        <input id="eNote" placeholder="备注（可选）" style="width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);margin-bottom:10px">
+        <button class="btn pri block" onclick="addExpr()">添加取件码</button>
+        <div id="exList" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </section>
+
+  <details class="fold" id="later" style="margin-top:12px">
+    <summary><span id="i12"></span>稍后处理 · 待读清单 <span class="cnt" id="cLater">0</span><span class="chev" id="i13"></span></summary>
+    <div class="fold-body">
+      <div class="hint" style="margin-top:0">预计阅读 <b>超过 3 分钟</b>的条目自动标灰 —— 提醒你这不是碎片时间能刷完的，留给整块时间。</div>
+      <div id="laterList"></div>
+      <div class="row" style="margin-top:11px">
+        <input id="ltTitle" placeholder="标题 / 链接描述" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;flex:3;background:var(--surface-2)">
+        <input id="ltMin" type="number" min="1" max="180" value="3" placeholder="分钟" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;flex:1;background:var(--surface-2)">
+        <button class="btn sm pri" style="flex:0 0 auto" onclick="addLater()">加入</button>
+      </div>
+    </div>
+  </details>
+  </div>
+
+  <!-- ============ 习惯 tab ============ -->
+  <div class="tabpane hide" id="pane-habit">
+  <section class="zone">
+    <div class="zone-hd"><h2>习惯</h2><span class="tagline">连续天数 · 月历热力图</span></div>
+    <div class="card" style="padding:15px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+          <button class="iconbtn" onclick="hbNav(-1)" aria-label="上一页" style="flex:0 0 36px;width:36px;height:36px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(90deg)"><path d="M6 9l6 6 6-6"/></svg></button>
+          <b id="hbTitle" style="flex:1;text-align:center;font-size:13.5px"></b>
+          <button class="iconbtn" onclick="hbNav(1)" aria-label="下一页" style="flex:0 0 36px;width:36px;height:36px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-90deg)"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+        <button class="btn sm ghost" id="hbModeBtn" onclick="hbToggleMode()" style="flex:0 0 auto">周视图</button>
+      </div>
+      <div class="hgrid" id="heat"></div>
+      <div class="hlegend">少 <i style="background:var(--well)"></i><i style="background:rgba(249,115,22,.14)"></i><i style="background:rgba(249,115,22,.38)"></i><i style="background:rgba(249,115,22,.62)"></i><i style="background:rgba(249,115,22,.92)"></i> 多</div>
+      <div class="row" style="margin-top:13px;margin-bottom:8px">
+        <input id="hName" placeholder="习惯名，如：背单词" style="flex:2;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">
+        <div id="hSwatches" style="flex:3;display:flex;gap:7px;flex-wrap:wrap;align-items:center"></div>
+      </div>
+      <button class="btn pri block" onclick="addHabit()">添加习惯</button>
+      <div id="habitList" style="margin-top:10px"></div>
+    </div>
+  </section>
+  </div>
+
+  <!-- ============ 日记 tab：周/月翻页 + 心情标签 + 编辑 + 列表 ============ -->
+  <div class="tabpane hide" id="pane-diary">
+  <section class="zone">
+    <div class="zone-hd"><h2>日记</h2><span class="tagline">心情标签 · 周/月翻页</span></div>
+    <div class="card" style="padding:15px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <button class="iconbtn" onclick="dyNav(-1)" aria-label="上一页" style="flex:0 0 38px;width:38px;height:38px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(90deg)"><path d="M6 9l6 6 6-6"/></svg></button>
+        <b id="dyCalTitle" style="flex:1;text-align:center;font-size:14px"></b>
+        <button class="iconbtn" onclick="dyNav(1)" aria-label="下一页" style="flex:0 0 38px;width:38px;height:38px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-90deg)"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="btn sm ghost" id="dyModeBtn" onclick="dyToggleMode()" style="flex:0 0 auto">月视图</button>
+      </div>
+      <div id="dyCal"></div>
+
+      <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <div class="row" style="margin-bottom:8px">
+          <input id="dyDate" type="date" aria-label="日记日期" style="min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);flex:1">
+          <span class="pill" id="dyCnt" style="flex:0 0 auto">0 篇</span>
+        </div>
+        <div id="dyMoods" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <textarea id="dyTx" rows="4" placeholder="今天过得怎么样？写几句…（小墨也能看到，问它「我日记里写了什么」）" style="width:100%;min-height:110px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);box-sizing:border-box;margin-bottom:10px;resize:vertical"></textarea>
+        <button class="btn pri block" onclick="saveDiary()">保存日记</button>
+      </div>
+
+      <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <div style="font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px">全部日记</div>
+        <div id="dyList"></div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <div style="text-align:center;color:var(--faint);font-size:11.5px;padding:22px 10px 8px;line-height:1.7">
+    数据全部存在你自己的浏览器里，不上传任何服务器。<br>
+    换设备 / 清缓存前，记得点一次「导出 JSON 备份」。
+  </div>
+</div>
+
+<!-- ============ AI 悬浮球 ============ -->
+<div id="orb" role="button" tabindex="0" aria-label="AI 伴侣"></div>
+<div id="bubble" class="hide"></div>
+
+<div id="panel" class="hide">
+  <div class="ph">
+    <span id="i14"></span>
+    <div style="flex:1;min-width:0"><b>小墨</b><small id="phSub">本地规则引擎 · 不联网</small></div>
+    <button class="iconbtn" onclick="openLlmSettings()" aria-label="大模型设置" id="i17" title="云端大模型设置"></button>
+    <button class="iconbtn" onclick="openMem()" aria-label="记忆" id="i15"></button>
+    <button class="iconbtn" onclick="togglePanelAI(false)" aria-label="关闭" id="i16"></button>
+  </div>
+  <div id="chat"></div>
+  <div id="pin">
+    <button class="iconbtn" id="micBtn" onclick="micToggle()" aria-label="语音输入" style="flex:0 0 44px;background:var(--soft);color:var(--brand)"></button>
+    <textarea id="pinTx" rows="1" placeholder="跟我说点什么…" aria-label="消息输入"></textarea>
+    <button class="iconbtn" onclick="sendMsg()" aria-label="发送" style="flex:0 0 44px;background:var(--brand);color:var(--on-brand)"></button>
+  </div>
+</div>
+
+<!-- 专注遮罩 -->
+<div id="focusOv" class="hide">
+  <div style="font-size:13px;color:#9BA3B8;letter-spacing:2px">专注中</div>
+  <div class="big" id="ovTime">25:00</div>
+  <div class="sub" id="ovTask">离开这个页面会被计入分心。手机记得开系统勿扰。</div>
+  <div class="dis" id="ovDis"></div>
+  <div class="acts">
+    <button class="btn" onclick="pomoPause()" id="ovPause">暂停</button>
+    <button class="btn pri" onclick="pomoGiveUp()">放弃</button>
+  </div>
+</div>
+
+<div id="modalHost"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   0. 存储层：localStorage + 配额保护（坑3）
+   ========================================================= */
+const K = 'wb_deck_';
+function load(k, d){
+  try{ const v = localStorage.getItem(K+k); return v===null ? d : JSON.parse(v); }
+  catch(e){ console.warn('读取失败',k,e); return d; }
+}
+function save(k, v){
+  try{ localStorage.setItem(K+k, JSON.stringify(v)); return true; }
+  catch(e){
+    // QuotaExceededError：必须给用户可见的错误，不能静默失败
+    const q = e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014);
+    toast(q ? '存储空间已满（浏览器上限约 5MB）。请先导出备份，再删掉一些带图片的笔记。'
+            : '保存失败：'+(e&&e.message||'未知错误'), true);
+    return false;
+  }
+}
+function usageMB(){
+  let n=0; for(const k in localStorage){ if(Object.prototype.hasOwnProperty.call(localStorage,k) && k.startsWith(K)) n += localStorage[k].length + k.length; }
+  return n/1048576;
+}
+
+/* =========================================================
+   1. 图标（内联 SVG，无 emoji）
+   ========================================================= */
+const P = {
+  cal:'M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1z',
+  cloud:'M7 17a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.5 3.5 0 0117 17H7z',
+  moon:'M20 13.5A8 8 0 019.5 3 8.5 8.5 0 1020 13.5z',
+  gear:'M12 15a3 3 0 100-6 3 3 0 000 6z|M19.4 14a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V20a2 2 0 11-4 0v-.1A1.6 1.6 0 008 18.4a1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H2a2 2 0 110-4h.1A1.6 1.6 0 003.6 8a1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H8a1.6 1.6 0 001-1.5V2a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V8a1.6 1.6 0 001.5 1H22a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z',
+  bell:'M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0',
+  book:'M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z',
+  clock:'M12 22a10 10 0 100-20 10 10 0 000 20zM12 6v6l4 2',
+  target:'M12 22a10 10 0 100-20 10 10 0 000 20zM12 18a6 6 0 100-12 6 6 0 000 12zM12 14a2 2 0 100-4 2 2 0 000 4z',
+  chart:'M18 20V10M12 20V4M6 20v-6',
+  note:'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8',
+  inbox:'M22 12h-6l-2 3h-4l-2-3H2M5.5 5.5h13l3.5 6.5v6a2 2 0 01-2 2H4a2 2 0 01-2-2v-6z',
+  chev:'M6 9l6 6 6-6',
+  x:'M18 6L6 18M6 6l12 12',
+  send:'M22 2L11 13M22 2l-7 20-4-9-9-4z',
+  mic:'M12 15a3 3 0 003-3V5a3 3 0 00-6 0v7a3 3 0 003 3zM19 10v2a7 7 0 01-14 0v-2M12 19v4',
+  spark:'M12 2l2.2 6.5L21 11l-6.8 2.5L12 20l-2.2-6.5L3 11l6.8-2.5z',
+  brain:'M12 5a3 3 0 00-6 0 3 3 0 00-2 5.2A3 3 0 006 16a3 3 0 006 1zM12 5a3 3 0 016 0 3 3 0 012 5.2A3 3 0 0118 16a3 3 0 01-6 1zM12 5v12',
+  check:'M20 6L9 17l-5-5',
+  drop:'M12 22a7 7 0 007-7c0-5-7-13-7-13S5 10 5 15a7 7 0 007 7z',
+  wallet:'M5 8h14a1 1 0 011 1v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a1 1 0 011-1z|M4 8V6a2 2 0 012-2h12a1 1 0 011 1v3|M16 13h2',
+  flame:'M12 2c1 3-1 4-1 6a3 3 0 006 0c0-1 .5-2 1-3 2 2 4 5 4 8a5 5 0 01-10 0c0-3 2-5 4-8 .5 1 1 2 1 3 .5-2 0-3-1-6z'
+};
+function ico(n,s,c){
+  s=s||18; c=c||'currentColor';
+  const d=P[n]; if(!d) return '';   // 兜底：图标名不存在时返回空，避免 .split 抛错导致整段逻辑中断
+  const paths=d.split('|').map(x=>`<path d="${x}"/>`).join('');
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+}
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+/* =========================================================
+   2. 时间工具
+   ========================================================= */
+const DAY=86400000;
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hm =d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const DAYNAME=['周日','周一','周二','周三','周四','周五','周六'];
+function mondayOf(d){ const x=new Date(d); x.setHours(0,0,0,0); const w=(x.getDay()+6)%7; x.setDate(x.getDate()-w); return x; }
+function toMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function fmtLeft(ms){
+  if(ms<=0) return '已逾期';
+  const d=Math.floor(ms/DAY), h=Math.floor(ms%DAY/3600000), m=Math.floor(ms%3600000/60000);
+  if(d>0) return `${d}天${h}时`;
+  if(h>0) return `${h}时${m}分`;
+  return `${m}分`;
+}
+
+/* =========================================================
+   3. 默认数据（铁律6：首屏必须有内容，含 1 条逾期）
+   ========================================================= */
+function seedTerm(){
+  // 让"今天"落在第 8 周 —— 首次打开就能看到完整周历效果，用户可去设置改成真实开学日
+  const m = mondayOf(new Date()); m.setDate(m.getDate()-49); return ymd(m);
+}
+const DEF_SET = {
+  name:'', termStart:seedTerm(), totalWeeks:20, examWeeks:'9,10',
+  lat:30.99, lon:104.68, city:'德阳·中江',
+  sleepH:7.5, prepMin:40, commuteMin:15,
+  planMin:25, bud:1500, aiNet:true, aiOn:true, aiUrl:'http://localhost:8787', autoLoc:true, seeded:true
+};
+const SEED_CLASSES=[
+  {id:'c1',day:1,s:'08:00',e:'09:40',name:'建筑施工技术',room:'3教201'},
+  {id:'c2',day:1,s:'10:00',e:'11:40',name:'建筑构造与识图',room:'3教201'},
+  {id:'c3',day:1,s:'14:00',e:'15:40',name:'工程测量',room:'实训楼A'},
+  {id:'c4',day:2,s:'08:00',e:'09:40',name:'建筑CAD',room:'机房302'},
+  {id:'c5',day:2,s:'14:00',e:'16:30',name:'BIM建模实训',room:'机房305'},
+  {id:'c6',day:3,s:'10:00',e:'11:40',name:'结构力学',room:'2教108'},
+  {id:'c7',day:3,s:'14:00',e:'15:40',name:'建筑材料',room:'2教108'},
+  {id:'c8',day:4,s:'08:00',e:'09:40',name:'建筑设备',room:'3教205'},
+  {id:'c9',day:4,s:'10:00',e:'11:40',name:'工程造价',room:'3教205'},
+  {id:'c10',day:5,s:'08:00',e:'09:40',name:'建筑安全管理',room:'2教110'},
+  {id:'c11',day:5,s:'14:00',e:'15:40',name:'体育',room:'操场'}
+];
+function seedDdl(){
+  const t=new Date(); const at=(dd,hh,mm)=>{const x=new Date(t);x.setDate(x.getDate()+dd);x.setHours(hh,mm,0,0);return x.getTime();};
+  return [
+    {id:'d1',title:'第3章 土方工程课后习题',course:'建筑施工技术',due:at(-2,23,59),done:false,seed:true},
+    {id:'d2',title:'工程量清单计价练习',      course:'工程造价',    due:at(1,23,59), done:false,seed:true},
+    {id:'d3',title:'望湖苑给排水 Revit 模型提交',course:'BIM建模实训',due:at(2,18,0), done:false,seed:true},
+    {id:'d4',title:'静定结构内力图 8 题',      course:'结构力学',    due:at(8,23,59), done:false,seed:true},
+    {id:'d5',title:'建筑平面图绘制',           course:'建筑CAD',     due:at(-1,23,59),done:true, seed:true}
+  ];
+}
+const SEED_MAT=[
+  {id:'m1',course:'建筑施工技术',type:'PPT', title:'第3章 土方工程.pptx', loc:'学习通 › 课程资料',seed:true},
+  {id:'m2',course:'建筑施工技术',type:'录播',title:'0715 直播回放（模板工程）',loc:'学习通 › 直播回放',seed:true},
+  {id:'m3',course:'工程造价',   type:'PDF', title:'工程量清单计价规范 GB50500.pdf',loc:'飞书 › 造价资料',seed:true},
+  {id:'m4',course:'BIM建模实训',type:'PPT', title:'Revit 族制作入门.pptx',loc:'飞书 › BIM',seed:true},
+  {id:'m5',course:'结构力学',   type:'PDF', title:'图乘法专题讲义.pdf',   loc:'本地 › D:/学习/力学',seed:true}
+];
+const SEED_LATER=[
+  {id:'l1',title:'四川省 2027 专升本政策解读长文',mins:12,done:false,ts:Date.now()-DAY*2,seed:true},
+  {id:'l2',title:'Revit 参数化族教程（含实例）',  mins:8, done:false,ts:Date.now()-DAY,  seed:true},
+  {id:'l3',title:'学习通本周签到还没补',          mins:1, done:false,ts:Date.now()-3600e3,seed:true},
+  {id:'l4',title:'图乘法速记口诀',                mins:3, done:false,ts:Date.now()-7200e3,seed:true}
+];
+const SEED_NOTE=[
+  {id:'n1',text:'图乘法前提：至少一个图是直线图，纵标 y 必须取在直线图上。',img:null,ts:Date.now()-DAY,seed:true},
+  {id:'n2',text:'土方边坡系数 m = 水平投影宽度 / 深度，考试爱考换算。',img:null,ts:Date.now()-3600e3,seed:true}
+];
+const SEED_WALLET=[
+  {id:'w1',type:'exp',amount:12,cat:'餐饮',note:'食堂午饭',ts:Date.now()-DAY*2,seed:true},
+  {id:'w2',type:'exp',amount:35,cat:'购物',note:'洗衣液',ts:Date.now()-DAY,seed:true},
+  {id:'w3',type:'inc',amount:1500,cat:'其他',note:'本月生活费到账',ts:Date.now()-DAY*3,seed:true}
+];
+const SEED_EXPR=[
+  {id:'x1',company:'菜鸟/其他',code:'H3-2-1234',loc:'菜鸟驿站 3 号柜',note:'专业书',due:Date.now()+2*DAY,got:false,ts:Date.now()-DAY,seed:true},
+  {id:'x2',company:'顺丰',code:'SF-8839-2210',loc:'丰巢 A 柜',note:'显卡',due:Date.now()-DAY,got:false,ts:Date.now()-2*DAY,seed:true}
+];
+// 习惯打卡种子（logs 用「距今天数」生成，让首屏就有连续天数和热力图）
+const _hnoon=new Date(); _hnoon.setHours(12,0,0,0);
+const _hlog=o=>{ const d=new Date(_hnoon); d.setDate(d.getDate()-o); return d.getTime(); };
+const SEED_HABIT=[
+  {id:'h1',name:'背单词',color:'var(--brand)',created:_hlog(10),logs:[_hlog(0),_hlog(1),_hlog(2),_hlog(3),_hlog(4),_hlog(6),_hlog(7),_hlog(8)],seed:true},
+  {id:'h2',name:'每日刷题',color:'#10B981',created:_hlog(8), logs:[_hlog(0),_hlog(1),_hlog(2),_hlog(5),_hlog(6),_hlog(7)],seed:true},
+  {id:'h3',name:'早起',color:'#F59E0B',created:_hlog(15),logs:[_hlog(1),_hlog(2),_hlog(3)],seed:true}
+];
+
+/* =========================================================
+   4. 状态
+   ========================================================= */
+let SET   = Object.assign({}, DEF_SET, load('set',{}));
+let CLS   = load('cls', SEED_CLASSES);
+let DDL   = load('ddl', seedDdl());
+let MAT   = load('mat', SEED_MAT);
+let NOTE  = load('note', SEED_NOTE);
+let LATER = load('later', SEED_LATER);
+let FOCUS = load('focus', []);          // 专注记录
+let MEM   = load('mem', {facts:[],chat:[]});  // AI 长期记忆
+let WX    = load('wx', null);           // 天气缓存
+let WALLET= load('wallet', SEED_WALLET); // 生活费记账
+let EXPR  = load('expr', SEED_EXPR);     // 快递取件码
+let HABIT = load('habit', SEED_HABIT);   // 习惯打卡
+let DIARY = load('diary', []);            // 日记（每天一篇，按日期）
+let WTYPE = 'exp';                       // 记账当前类型
+let HCOLOR= 'var(--brand)';                   // 新建习惯的当前选色
+
+/* =========================================================
+   4b. 云端同步（Supabase REST + fetch，零外部 JS 依赖）
+   配置存 wb_deck_cloud = {url, anonKey, user, uid, token, rowId, syncAt, localAt}
+   登录后 saveAll 自动推送到云端；启动/登录时拉取按时间取新。
+   Supabase 免费版：无限项目、500MB 数据库、5 万月活用户。
+   需要在 Supabase 控制台建一张表 wb(id, user_id, data, updated_at) + RLS。
+   ========================================================= */
+let cloudBusy=false, cloudTimer=null, cloudDown=0;
+function cloudCfg(){ return load('cloud', {}); }
+function cloudSave(c){ save('cloud', Object.assign(load('cloud',{}), c)); }
+function cloudOn(){ const c=cloudCfg(); return !!(c.url && c.anonKey && c.token); }
+function cloudBase(){ const c=cloudCfg(); return (c.url || '').replace(/\/+$/,''); }
+function cloudHeaders(extra){
+  const c=cloudCfg(); const h={'apikey':c.anonKey, 'Authorization':'Bearer '+c.token, 'Content-Type':'application/json'};
+  return Object.assign(h, extra||{});
+}
+async function cloudReq(method, path, body, headers){
+  const r=await fetch(cloudBase()+path, {
+    method, headers: cloudHeaders(headers), body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+  });
+  const txt=await r.text().catch(()=> '');
+  let j=null; try{ j=JSON.parse(txt); }catch(e){}
+  if(!r.ok){
+    const msg=(j && (j.error_description || j.error || (j.msg) || j.message)) || ('HTTP '+r.status);
+    throw new Error(String(msg).slice(0,150));
+  }
+  return j||{};
+}
+/* 账号：注册（邮箱）/ 登录 / 登出 */
+window.cloudRegister=async ()=>{
+  const u=document.getElementById('clUser').value.trim(), p=document.getElementById('clPass').value;
+  if(!u||!p) return toast('邮箱和密码都要填',true);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) return toast('注册请填邮箱（如 name@example.com）',true);
+  if(p.length<6) return toast('密码至少 6 位',true);
+  const btn=document.getElementById('clRegBtn'); if(btn) { btn.disabled=true; btn.textContent='注册中…'; }
+  try{
+    const j=await cloudReq('POST','/auth/v1/signup',{email:u,password:p});
+    if(j.access_token){ cloudSave({user:u, uid:j.user&&j.user.id, token:j.access_token}); }
+    else { cloudSave({user:u}); }   // 邮箱确认模式：先存邮箱，等确认后再登录
+    toast(j.access_token ? '注册成功，已自动登录' : '注册成功，请去邮箱点确认链接，再登录');
+    cloudPull(true); closeModal(); renderAll();
+  }catch(e){ toast('注册失败：'+e.message,true); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='注册新账号'; } }
+};
+window.cloudLogin=async ()=>{
+  const u=document.getElementById('clUser').value.trim(), p=document.getElementById('clPass').value;
+  if(!u||!p) return toast('邮箱和密码都要填',true);
+  const btn=document.getElementById('clLoginBtn'); if(btn){ btn.disabled=true; btn.textContent='登录中…'; }
+  try{
+    const j=await cloudReq('POST','/auth/v1/token?grant_type=password',{email:u,password:p});
+    cloudSave({user:u, uid:j.user&&j.user.id, token:j.access_token});
+    toast('登录成功');
+    cloudPull(true); closeModal(); renderAll();
+  }catch(e){ toast('登录失败：'+e.message,true); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='登录'; } }
+};
+window.cloudLogout=()=>{
+  askConfirm('退出登录？之后数据只存本机，不再自动同步。',()=>{
+    const c=cloudCfg(); delete c.token; delete c.user; delete c.uid; delete c.rowId; delete c.syncAt;
+    save('cloud',c); toast('已退出登录'); renderCloudStatus();
+  });
+};
+/* 数据存取：复用 exportJSON 同款格式（每用户一条记录，整包 JSON） */
+function cloudData(){ return { _app:'我的工作台', _ver:1, _at:new Date().toISOString(),
+  set:SET, cls:CLS, ddl:DDL, mat:MAT, note:NOTE, later:LATER, focus:FOCUS, mem:MEM, wallet:WALLET, expr:EXPR, habit:HABIT, diary:DIARY }; }
+window.cloudPush=async (silent)=>{
+  if(!cloudOn() || cloudBusy || Date.now()-cloudDown<30000) return false;
+  const c=cloudCfg(); if(!c.uid) return false;
+  cloudBusy=true;
+  try{
+    const data=cloudData();
+    if(c.rowId){
+      // 更新已有行：PATCH 需要 Prefer: return=representation 拿回数据
+      await cloudReq('PATCH','/rest/v1/wb?user_id=eq.'+encodeURIComponent(c.uid),{data, updated_at:new Date().toISOString()},
+        {'Prefer':'return=minimal'});
+    }else{
+      // 插入新行（upsert on user_id，防并发重复）
+      const j=await cloudReq('POST','/rest/v1/wb?on_conflict=user_id',{user_id:c.uid, data, updated_at:new Date().toISOString()},
+        {'Prefer':'return=representation'});
+      const row=Array.isArray(j)?j[0]:j;
+      if(row && row.id) cloudSave({rowId:row.id});
+    }
+    cloudSave({syncAt:new Date().toISOString(), localAt:data._at});
+    if(!silent) toast('☁ 已同步到云端');
+    return true;
+  }catch(e){
+    cloudDown=Date.now();
+    if(!silent) toast('云同步失败：'+e.message,true);
+    return false;
+  }finally{ cloudBusy=false; }
+};
+/* 拉取合并：按 _at 时间戳取新（ISO8601 可直接字典序比较）
+   冲突规则：
+   - 本地有 localAt（说明本地有真实修改历史）→ 谁新用谁
+   - 本地没有 localAt（首次登录/换设备，本地只是默认数据）→ 信任云端，直接拉取 */
+window.cloudPull=async (manual)=>{
+  if(!cloudOn() || cloudBusy) return false;
+  const c=cloudCfg(); if(!c.uid) return false;
+  cloudBusy=true;
+  try{
+    const j=await cloudReq('GET','/rest/v1/wb?user_id=eq.'+encodeURIComponent(c.uid)+'&select=*&limit=1&order=updated_at.desc');
+    const rows=Array.isArray(j)?j:[];
+    if(!rows.length){
+      // 云端没记录 → 首次使用，把本地上传
+      cloudBusy=false; await cloudPush(true);
+      if(manual) toast('☁ 已把本地数据同步到云端');
+      return true;
+    }
+    const row=rows[0];
+    if(!c.rowId) cloudSave({rowId:row.id});
+    const remote=row.data || {};
+    // 关键：localAt 为空 = 首次登录/新设备，本地没有真实修改历史 → 直接信任云端
+    if(!c.localAt){
+      applyData(remote, true);
+      cloudSave({syncAt:new Date().toISOString(), localAt:remote._at || new Date().toISOString()});
+      if(manual) toast('☁ 已拉取云端数据');
+      else toast('☁ 已从云端恢复数据');
+      return true;
+    }
+    const localAt=c.localAt;
+    // 云端数据时间戳大于本地 → 拉取覆盖；否则保留本地（稍后自动上传）
+    if(remote._at && String(remote._at) > String(localAt)){
+      applyData(remote, true);
+      cloudSave({syncAt:new Date().toISOString(), localAt:remote._at});
+      if(manual) toast('☁ 云端数据较新，已拉取并应用');
+      else toast('☁ 已从云端恢复数据');
+    }else{
+      cloudSave({localAt});
+      cloudBusy=false; await cloudPush(true);
+      if(manual) toast('☁ 本地数据较新，已上传云端');
+    }
+    return true;
+  }catch(e){
+    cloudDown=Date.now();
+    if(manual) toast('云同步失败：'+e.message,true);
+    return false;
+  }finally{ cloudBusy=false; }
+};
+/* 云端数据应用到本地（复用 importJSON 的逐键还原逻辑）
+   cloudApplying 标志：拉取写入时禁止 saveAll→cloudSyncDebounce 反向推送 */
+let cloudApplying=false;
+function applyData(d, fromCloud){
+  if(!d || typeof d!=='object') return;
+  cloudApplying=true;
+  if(Array.isArray(d.cls))  { CLS=d.cls;   saveAll.cls(); }
+  if(Array.isArray(d.ddl))  { DDL=d.ddl;   saveAll.ddl(); }
+  if(Array.isArray(d.mat))  { MAT=d.mat;   saveAll.mat(); }
+  if(Array.isArray(d.note)) { NOTE=d.note; saveAll.note(); }
+  if(Array.isArray(d.later)){ LATER=d.later; saveAll.later(); }
+  if(Array.isArray(d.focus)){ FOCUS=d.focus; saveAll.focus(); }
+  if(Array.isArray(d.wallet)){ WALLET=d.wallet; saveAll.wallet(); }
+  if(Array.isArray(d.expr)){ EXPR=d.expr; saveAll.expr(); }
+  if(Array.isArray(d.habit)){ HABIT=d.habit; saveAll.habit(); }
+  if(Array.isArray(d.diary)){ DIARY=d.diary; saveAll.diary(); }
+  if(d.mem && typeof d.mem==='object'){ MEM=Object.assign({facts:[],chat:[]},d.mem); saveAll.mem(); }
+  if(d.set && typeof d.set==='object'){ SET=Object.assign({},DEF_SET,d.set); saveAll.set(); }
+  cloudApplying=false;
+  renderAll();
+}
+/* 启动/登录后拉取一次（页面加载时调用） */
+function cloudInit(){
+  if(!cloudOn()) return;
+  // 等首屏渲染完再拉，避免与 seed 冲突
+  setTimeout(()=>{ if(cloudOn()) cloudPull(false); }, 1500);
+}
+function renderCloudStatus(){
+  const c=cloudCfg();
+  const el=document.getElementById('cloudTip');
+  if(!el) return;
+  if(cloudOn()) el.innerHTML=`<span style="color:var(--ok)">● 已登录：${esc(c.user)}</span> · 上次同步 ${c.syncAt?new Date(c.syncAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}):'—'}`;
+  else el.innerHTML='未登录（数据只存本机）。登录后课表/作业/记账/日记等会自动备份到云端。';
+}
+
+/* AI 桥实时同步：每次数据保存后 debounce 推送快照；服务不可用时冷却 30s 避免刷失败请求（不影响工作台） */
+let aiSyncT=null, aiDown=0;
+function syncAI(){
+  clearTimeout(aiSyncT);
+  aiSyncT=setTimeout(()=>{
+    if(Date.now()-aiDown<30000) return;
+    if (typeof aiCfg === 'function' && aiCfg().mode === 'direct') return;   // 直连模式：无需同步本地桥
+    try{
+      fetch((SET&&SET.aiUrl||'http://localhost:8787').replace(/localhost/i,'127.0.0.1')+'/v1/sync',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({cls:CLS,ddl:DDL,mat:MAT,note:NOTE,later:LATER,focus:FOCUS,
+          wallet:WALLET,expr:EXPR,habit:HABIT,diary:DIARY,mem:MEM,set:SET,wx:WX}),
+        signal:AbortSignal.timeout?AbortSignal.timeout(3000):undefined
+      }).then(r=>{ if(!r.ok) aiDown=Date.now(); }).catch(()=>{ aiDown=Date.now(); });
+    }catch(e){ aiDown=Date.now(); }
+  },400);
+}
+/* 云端推送 debounce：每次数据保存后防抖 1.5s 再上传（合并连续改动，省 API 请求）
+   同时记录"本地修改时间" localAt —— 这是冲突判断的关键基准 */
+function cloudSyncDebounce(){
+  if(!cloudOn()) return;
+  if(cloudApplying) return;            // 云端拉取写入，不触发反向推送
+  cloudSave({localAt:new Date().toISOString()});   // 用户操作 → 更新本地修改时间
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(()=>{ if(cloudOn()) cloudPush(true); }, 1500);
+}
+const saveAll = {
+  set:()=>{ const r=save('set',SET); syncAI(); cloudSyncDebounce(); return r; }, cls:()=>{ const r=save('cls',CLS); syncAI(); cloudSyncDebounce(); return r; },
+  ddl:()=>{ const r=save('ddl',DDL); syncAI(); cloudSyncDebounce(); return r; }, mat:()=>{ const r=save('mat',MAT); syncAI(); cloudSyncDebounce(); return r; },
+  note:()=>{ const r=save('note',NOTE); syncAI(); cloudSyncDebounce(); return r; }, later:()=>{ const r=save('later',LATER); syncAI(); cloudSyncDebounce(); return r; },
+  focus:()=>{ const r=save('focus',FOCUS); syncAI(); cloudSyncDebounce(); return r; }, mem:()=>{ const r=save('mem',MEM); syncAI(); cloudSyncDebounce(); return r; },
+  wx:()=>{ const r=save('wx',WX); syncAI(); cloudSyncDebounce(); return r; }, wallet:()=>{ const r=save('wallet',WALLET); syncAI(); cloudSyncDebounce(); return r; },
+  expr:()=>{ const r=save('expr',EXPR); syncAI(); cloudSyncDebounce(); return r; }, habit:()=>{ const r=save('habit',HABIT); syncAI(); cloudSyncDebounce(); return r; },
+  diary:()=>{ const r=save('diary',DIARY); syncAI(); cloudSyncDebounce(); return r; }
+};
+
+/* =========================================================
+   5. Toast
+   ========================================================= */
+let toastT;
+function toast(msg, bad){
+  let el=document.getElementById('toast');
+  if(!el){ el=document.createElement('div'); el.id='toast';
+    el.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:500;background:var(--toast-bg);color:#fff;padding:11px 17px;border-radius:12px;font-size:13.5px;max-width:min(420px,90vw);box-shadow:0 8px 26px rgba(0,0,0,.24);line-height:1.5;animation:toastIn .28s var(--ease-spring) both';
+    document.body.appendChild(el); }
+  el.textContent=msg; el.style.background = bad?'#B91C1C':'var(--toast-bg)'; el.style.display='block';
+  clearTimeout(toastT); toastT=setTimeout(()=>{ el.classList.add('toast-out'); setTimeout(()=>{ el.style.display='none'; el.classList.remove('toast-out'); }, 220); }, bad?5200:2400);
+}
+
+/* =========================================================
+   6. 教学周历
+   ========================================================= */
+function examSet(){ return new Set(String(SET.examWeeks||'').split(',').map(s=>parseInt(s.trim(),10)).filter(Boolean)); }
+function curWeek(){
+  const st=mondayOf(new Date(SET.termStart+'T00:00:00'));
+  const w=Math.floor((mondayOf(new Date())-st)/(7*DAY))+1;
+  return w;
+}
+function renderWeek(){
+  const w=curWeek(), ex=examSet(), isEx=ex.has(w), total=+SET.totalWeeks||20;
+  const inTerm = w>=1 && w<=total;
+  const el=document.getElementById('tbWeek');
+  el.className='tb-item'+(isEx?' exam':'');
+  const label = !inTerm ? (w<1?'开学前':'学期已结束') : `第 ${w} 周`;
+  let sub = DAYNAME[new Date().getDay()]+' · '+ymd(new Date()).slice(5).replace('-','月')+'日';
+  if(inTerm && isEx) sub='⚠ 考试周';
+  else if(inTerm){
+    const next=[...ex].filter(x=>x>w).sort((a,b)=>a-b)[0];
+    if(next) sub = `距考试周 ${next-w} 周 · ${DAYNAME[new Date().getDay()]}`;
+  }
+  el.innerHTML=`<span class="tb-ico">${ico('cal',19)}</span><div class="tb-tx"><b>${label}</b><span>${esc(sub)}</span></div>`;
+
+  let g='';
+  for(let i=1;i<=total;i++){
+    const c=['wk']; if(i<w)c.push('past'); if(i===w)c.push('now'); if(ex.has(i))c.push('exam');
+    g+=`<div class="${c.join(' ')}">${i}</div>`;
+  }
+  document.getElementById('pWeek').innerHTML=
+    `<b style="font-size:14px">本学期教学周历</b>
+     <div style="font-size:12px;color:var(--sub);margin-top:3px">开学 ${esc(SET.termStart)} · 共 ${total} 周 · 考试周 ${esc(SET.examWeeks||'未设置')}</div>
+     <div class="weeks">${g}</div>
+     <div style="font-size:11.5px;color:var(--faint);margin-top:11px">红框 = 考试周，实心 = 本周。开学日期去右上角设置里改成你的真实日期。</div>`;
+}
+
+/* =========================================================
+   6b. 实时时钟（顶栏 tbClock + pTime 面板）
+   ========================================================= */
+let clockOffset=0;   // 毫秒：显示时间 = Date.now()+clockOffset（零外链时区修正）
+function renderClock(){
+  // 上海时区修正：Open-Meteo 的 utc_offset_seconds 是"秒"（东八区=28800），转毫秒乘 1000；
+  // + getTimezoneOffset()*60000（东八区 tzOffset=-480 → 抵消为 0；UTC 环境 → +8h 显示上海时间）
+  clockOffset = ((WX&&WX.utc!=null)?WX.utc:28800)*1000 + new Date().getTimezoneOffset()*60000;
+  const d=new Date(Date.now()+clockOffset);
+  const hh=pad(d.getHours()), mm=pad(d.getMinutes()), ss=pad(d.getSeconds());
+  const online = !!(WX&&WX.utc!=null);
+  const el=document.getElementById('tbClock'); if(!el) return;
+  el.innerHTML=`<span class="tb-ico">${ico('clock',19)}</span>
+    <div class="tb-tx"><b style="font-size:15px;font-variant-numeric:tabular-nums">${hh}:${mm}:${ss}</b>
+    <span>${d.getMonth()+1}月${d.getDate()}日 ${DAYNAME[d.getDay()]}${online?'':' ·本地'}</span></div>`;
+  const p=document.getElementById('pTime'); if(!p) return;
+  const start=new Date(d); start.setHours(0,0,0,0);
+  const dayPct=Math.round((d-start)/DAY*100);
+  const w=curWeek(), total=+SET.totalWeeks||20, inTerm=w>=1&&w<=total;
+  p.innerHTML=`<b style="font-size:14px">实时时间</b>
+    <div style="font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15">${hh}:${mm}:${ss}</div>
+    <div style="font-size:13px;color:var(--sub);margin-top:4px">${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${DAYNAME[d.getDay()]} · 今天已过 ${dayPct}%</div>
+    <div style="font-size:12.5px;color:var(--brand);margin-top:10px">${ico('cloud',13)} ${online?`已联网：按 ${esc(SET.city)} 时区（上海时间）显示`:'未联网：按设备本地时间显示'}</div>
+    <div style="font-size:12px;color:var(--faint);margin-top:8px">${inTerm?`现在是第 ${w} 周（共 ${total} 周）`:`学期${w<1?'还未开始':'已结束'}`} · 时间来源：${online?'Open-Meteo 时区偏移':'设备本地时钟'}</div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:10px">联网时按上海时间显示（修正时区误差）。注：本地时钟本身被改过的话无法校准，Open-Meteo 不提供服务器当前时刻。</div>`;
+}
+
+/* =========================================================
+   7. 课表 / 下一节课
+   ========================================================= */
+function todayCls(){ const d=new Date().getDay(); return CLS.filter(c=>c.day===d).sort((a,b)=>toMin(a.s)-toMin(b.s)); }
+function nextCls(){
+  const now=new Date(), nowM=now.getHours()*60+now.getMinutes(), dow=now.getDay();
+  for(let off=0; off<8; off++){
+    const d=(dow+off)%7;
+    const list=CLS.filter(c=>c.day===d).sort((a,b)=>toMin(a.s)-toMin(b.s));
+    for(const c of list){
+      if(off===0 && toMin(c.e)<=nowM) continue;
+      const at=new Date(now); at.setDate(at.getDate()+off); at.setHours(...c.s.split(':').map(Number),0,0);
+      const live = off===0 && toMin(c.s)<=nowM && nowM<toMin(c.e);
+      return {c,at,off,live};
+    }
+  }
+  return null;
+}
+function renderNext(){
+  const n=nextCls(), box=document.getElementById('nextCls');
+  if(!n){ box.innerHTML=`<div class="lbl">${ico('clock',14,'#fff')} 下一节课</div><div class="nm">课表还是空的</div><div class="mt">去设置里导入你的课表</div>`; return; }
+  const {c,at,off,live}=n;
+  const when = off===0?'今天':off===1?'明天':`${DAYNAME[at.getDay()]}（${off}天后）`;
+  const ms = at - Date.now();
+  box.innerHTML=`
+    <div class="lbl">${ico('clock',14,'#fff')} ${live?'正在上课':'下一节课'}</div>
+    <div class="nm">${esc(c.name)}</div>
+    <div class="mt">${when} ${c.s}–${c.e} · ${esc(c.room||'教室待定')}</div>
+    <div class="cd"><span>${live?'本节还剩':'距上课'}</span>
+      <b>${live?fmtLeft(new Date(new Date().setHours(...c.e.split(':').map(Number),0,0))-Date.now()):fmtLeft(ms)}</b></div>`;
+}
+function renderToday(){
+  const list=todayCls(), now=new Date(), nowM=now.getHours()*60+now.getMinutes();
+  document.getElementById('cToday').textContent=list.length;
+  document.getElementById('todaySlots').innerHTML = list.length? list.map(c=>{
+    const done=toMin(c.e)<=nowM, live=toMin(c.s)<=nowM&&nowM<toMin(c.e);
+    return `<div class="slot ${done?'done':''} ${live?'live':''}">
+      <div class="tm"><b>${c.s}</b>${c.e}</div>
+      <div class="bd"><b>${esc(c.name)}</b><span>${esc(c.room||'')}${live?' · 进行中':done?' · 已结束':''}</span></div></div>`;
+  }).join('') : `<div class="empty">${DAYNAME[now.getDay()]}没课，好好休息 👀</div>`;
+}
+
+/* =========================================================
+   8. 作业 DDL（3天橙 / 24小时红）
+   ========================================================= */
+function ddlLevel(ms){ return ms<=0?'red' : ms<=DAY?'red' : ms<=3*DAY?'org' : 'ok'; }
+function renderDdl(){
+  const now=Date.now();
+  const open=DDL.filter(d=>!d.done).sort((a,b)=>a.due-b.due);
+  const done=DDL.filter(d=>d.done).sort((a,b)=>b.due-a.due);
+  document.getElementById('cDdl').textContent=open.length;
+  const row=d=>{
+    const ms=d.due-now, lv=d.done?'':'d-'+ddlLevel(ms);
+    const dd=new Date(d.due);
+    return `<div class="ddl ${d.done?'done':''} ${lv}">
+      <button class="ck" onclick="toggleDdl('${d.id}')" aria-label="切换完成"><span class="box">${ico('check',13,'#fff')}</span></button>
+      <div class="bd"><b>${esc(d.title)}</b><span>${esc(d.course)} · ${ymd(dd).slice(5)} ${hm(dd)}</span></div>
+      <div class="cd"><b>${d.done?'已完成':fmtLeft(ms)}</b><span>${d.done?'':(ms<=0?'快补交':'剩余')}</span></div>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delDdl('${d.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+    </div>`;
+  };
+  document.getElementById('ddlList').innerHTML =
+    (open.length?open.map(row).join(''):`<div class="empty">没有未完成的作业 🎉</div>`) +
+    (done.length?`<div style="font-size:11.5px;color:var(--faint);margin-top:13px;padding-top:9px;border-top:1px dashed var(--line)">已完成 ${done.length}</div>`+done.slice(0,5).map(row).join(''):'');
+}
+window.toggleDdl=id=>{ const d=DDL.find(x=>x.id===id); if(!d)return; d.done=!d.done; saveAll.ddl(); renderAll(); if(d.done) toast('搞定一件 👍'); };
+window.delDdl=id=>{ askConfirm('删除这条作业？',()=>{ DDL=DDL.filter(x=>x.id!==id); saveAll.ddl(); renderAll(); }); };
+
+/* =========================================================
+   9. 资料索引（按课名聚合）
+   ========================================================= */
+function renderMat(){
+  document.getElementById('cMat').textContent=MAT.length;
+  const g={}; MAT.forEach(m=>{ (g[m.course]=g[m.course]||[]).push(m); });
+  const keys=Object.keys(g).sort();
+  document.getElementById('matList').innerHTML = keys.length? keys.map(k=>`
+    <details class="mgrp"><summary>${ico('book',15)} ${esc(k)}
+      <span class="pill" style="margin-left:auto">${g[k].length}</span></summary>
+      ${g[k].map(m=>`<div class="mitem">
+        <span class="pill mt-${esc(m.type)}">${esc(m.type)}</span>
+        <div class="bd"><b>${esc(m.title)}</b><span>${esc(m.loc||'')}</span></div>
+        <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delMat('${m.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+      </div>`).join('')}
+    </details>`).join('') : `<div class="empty">还没有资料，点下面按钮加第一条</div>`;
+}
+window.delMat=id=>{ askConfirm('删除这条资料？',()=>{ MAT=MAT.filter(x=>x.id!==id); saveAll.mat(); renderMat(); }); };
+
+/* =========================================================
+   10. 番茄钟 —— 坑1：用 endTimestamp 反算，绝不累加计数器
+   ========================================================= */
+let PM = load('pm', null);   // {end, plan, paused, leftAtPause, dis, pauses, startedAt}
+let pmTimer=null;
+function pmLeft(){
+  if(!PM) return (SET.planMin||25)*60000;
+  if(PM.paused) return PM.leftAtPause;
+  return Math.max(0, PM.end - Date.now());   // ★ 时间戳反算：后台被限流也不会算错
+}
+function setPlan(d){
+  if(PM){ toast('专注进行中，先结束再改时长'); return; }
+  SET.planMin=Math.min(120,Math.max(5,(SET.planMin||25)+d)); saveAll.set(); renderPomo();
+}
+window.pomoStart=()=>{
+  if(PM && !PM.paused){ pomoPause(); return; }
+  if(PM && PM.paused){                       // 继续
+    PM.end = Date.now()+PM.leftAtPause; PM.paused=false; save('pm',PM);
+  }else{
+    const plan=(SET.planMin||25);
+    PM={ end:Date.now()+plan*60000, plan, paused:false, leftAtPause:0, dis:0, pauses:0, startedAt:Date.now() };
+    save('pm',PM);
+  }
+  document.getElementById('focusOv').classList.remove('hide');
+  audioResume(); tick(); if(!pmTimer) pmTimer=setInterval(tick,500);
+};
+window.pomoPause=()=>{
+  if(!PM) return;
+  if(PM.paused){ PM.end=Date.now()+PM.leftAtPause; PM.paused=false; }
+  else { PM.leftAtPause=pmLeft(); PM.paused=true; PM.pauses++; }
+  save('pm',PM); tick();
+};
+window.pomoGiveUp=()=>{
+  if(!PM) return;
+  askConfirm('放弃这次专注？已进行的时间会记录，但评分会打折。',()=>finishPomo(false));
+};
+function finishPomo(ok){
+  const used=Math.round((Date.now()-PM.startedAt)/60000);
+  const rate=Math.min(1, used/Math.max(1,PM.plan));
+  let score=Math.round(100*rate - PM.dis*10 - PM.pauses*4);
+  if(!ok) score=Math.round(score*0.7);
+  score=Math.max(0,Math.min(100,score));
+  FOCUS.push({id:'f'+Date.now(),ts:Date.now(),plan:PM.plan,used,dis:PM.dis,pauses:PM.pauses,score,ok});
+  saveAll.focus();
+  PM=null; localStorage.removeItem(K+'pm');
+  clearInterval(pmTimer); pmTimer=null;
+  document.getElementById('focusOv').classList.add('hide');
+  noiseStop();
+  if(ok){ ding(); aiSay(`这轮专注结束了，实际 ${used} 分钟，得分 ${score}。${score>=85?'状态很稳，保持。':score>=60?'还行，下轮少切几次页面就能上 85。':'这轮打断有点多，要不先歇 5 分钟？'}`); }
+  renderAll();
+}
+function tick(){
+  const left=pmLeft();
+  const mm=pad(Math.floor(left/60000)), ss=pad(Math.floor(left%60000/1000));
+  const t=`${mm}:${ss}`;
+  document.getElementById('ovTime').textContent=t;
+  document.getElementById('pomoTimeSvg').textContent=t;
+  document.getElementById('ovPause').textContent = PM&&PM.paused?'继续':'暂停';
+  document.getElementById('ovDis').textContent = PM&&(PM.dis||PM.pauses)?`分心 ${PM.dis} 次 · 暂停 ${PM.pauses} 次`:'';
+  const plan=(PM?PM.plan:(SET.planMin||25))*60000;
+  const prog = 1 - left/plan;
+  document.getElementById('ringFg').setAttribute('stroke-dashoffset', String(414.7*Math.max(0,Math.min(1,prog))));
+  document.getElementById('pomoStSvg').textContent = PM? (PM.paused?'已暂停':'专注中') : '准备开始';
+  document.getElementById('pomoBtn').textContent = PM? (PM.paused?'继续专注':'暂停') : '开始专注';
+  if(PM && !PM.paused && left<=0) finishPomo(true);
+}
+function renderPomo(){
+  if(!PM){
+    const t=`${pad(SET.planMin||25)}:00`;
+    document.getElementById('pomoTimeSvg').textContent=t;
+    document.getElementById('ringFg').setAttribute('stroke-dashoffset','0');
+  }
+  tick();
+}
+// 分心检测：离开页面即计数（这就是"免打扰"能测到的真实信号）
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden && PM && !PM.paused){ PM.dis++; save('pm',PM); }
+  else if(!document.hidden){ tick(); renderNext(); }
+});
+
+/* ---- 专注评分 & 近7天 ---- */
+function renderScore(){
+  const rec=FOCUS.slice(-30);
+  const arc=document.getElementById('scoreArc'), num=document.getElementById('scoreNum');
+  if(!rec.length){
+    arc.setAttribute('stroke-dashoffset','238.8'); num.textContent='—';
+    document.getElementById('scoreTx').textContent='还没有专注记录。完成第一个番茄钟后，这里会给出你的专注质量分。';
+  }else{
+    const last7=rec.filter(r=>r.ts>Date.now()-7*DAY);
+    const base=last7.length?last7:rec.slice(-3);
+    const avg=Math.round(base.reduce((s,r)=>s+r.score,0)/base.length);
+    num.textContent=avg;
+    arc.setAttribute('stroke-dashoffset', String(238.8*(1-avg/100)));
+    arc.setAttribute('stroke', avg>=80?'#10B981':avg>=55?'#F59E0B':'#EF4444');
+    const dis=base.reduce((s,r)=>s+r.dis,0), n=base.length;
+    document.getElementById('scoreTx').innerHTML=
+      `近 ${last7.length?'7 天':'几次'}共 <b>${n}</b> 轮，平均分 <b>${avg}</b>。<br>
+       累计分心 <b>${dis}</b> 次${dis>n*2?'，切页面有点频繁':'，控制得不错'}。<br>
+       <span style="color:var(--faint);font-size:12px">算法：完成率×100 − 分心×10 − 暂停×4</span>`;
+  }
+  // 近 7 天柱状图
+  const days=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0); days.push(d); }
+  const mins=days.map(d=>FOCUS.filter(r=>r.ts>=d.getTime()&&r.ts<d.getTime()+DAY).reduce((s,r)=>s+r.used,0));
+  const max=Math.max(30,...mins);
+  document.getElementById('bars').innerHTML=days.map((d,i)=>{
+    const h=Math.round(mins[i]/max*100);
+    return `<div class="bar" style="height:${Math.max(3,h)}%;background:${mins[i]?'var(--brand)':'var(--soft)'}" title="${mins[i]}分钟"><i>${DAYNAME[d.getDay()][1]}</i></div>`;
+  }).join('');
+}
+
+/* =========================================================
+   11. 白噪音 —— Web Audio 原生生成，零外链零音频文件
+   ========================================================= */
+let AC=null, noiseNode=null, noiseGain=null, curNoise='';
+const NOISES=[
+  {k:'',   n:'静音'},
+  {k:'rain',n:'雨声'},
+  {k:'pink',n:'粉噪'},
+  {k:'brown',n:'低频流'},
+  {k:'white',n:'白噪音'}
+];
+function audioResume(){ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){} }
+function noiseBuf(kind){
+  const len=AC.sampleRate*3, b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
+  if(kind==='white'){ for(let i=0;i<len;i++) d[i]=Math.random()*2-1; }
+  else if(kind==='brown'){ let l=0; for(let i=0;i<len;i++){ const w=Math.random()*2-1; l=(l+.02*w)/1.02; d[i]=l*3.5; } }
+  else { // pink（Paul Kellet 近似）—— rain 也基于它，只是滤波不同
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<len;i++){ const w=Math.random()*2-1;
+      b0=.99886*b0+w*.0555179; b1=.99332*b1+w*.0750759; b2=.969*b2+w*.153852;
+      b3=.8665*b3+w*.3104856; b4=.55*b4+w*.5329522; b5=-.7616*b5-w*.016898;
+      d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11; b6=w*.115926; }
+  }
+  return b;
+}
+function noiseStop(){ if(noiseNode){ try{noiseNode.stop()}catch(e){} noiseNode=null; } curNoise=''; renderNoise(); }
+function noisePlay(kind){
+  audioResume(); if(!AC) return toast('这个浏览器不支持音频合成');
+  noiseStop(); if(!kind) return;
+  const src=AC.createBufferSource(); src.buffer=noiseBuf(kind==='rain'?'pink':kind); src.loop=true;
+  const filt=AC.createBiquadFilter();
+  if(kind==='rain'){ filt.type='lowpass'; filt.frequency.value=2200; }
+  else if(kind==='brown'){ filt.type='lowpass'; filt.frequency.value=700; }
+  else { filt.type='lowpass'; filt.frequency.value=9000; }
+  noiseGain=AC.createGain(); noiseGain.gain.value=0.0001;
+  src.connect(filt).connect(noiseGain).connect(AC.destination);
+  src.start(); noiseGain.gain.exponentialRampToValueAtTime(kind==='white'?0.09:0.20, AC.currentTime+1.2);
+  noiseNode=src; curNoise=kind; renderNoise();
+}
+function renderNoise(){
+  document.getElementById('noiseBar').innerHTML=NOISES.map(o=>
+    `<button class="${curNoise===o.k?'on':''}" onclick="noisePlay('${o.k}')">${o.n}</button>`).join('');
+}
+window.noisePlay=noisePlay;
+function ding(){
+  audioResume(); if(!AC) return;
+  [0,.18,.36].forEach((t,i)=>{ const o=AC.createOscillator(),g=AC.createGain();
+    o.frequency.value=[880,1108,1320][i]; o.type='sine';
+    g.gain.setValueAtTime(0,AC.currentTime+t); g.gain.linearRampToValueAtTime(.22,AC.currentTime+t+.02);
+    g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+t+.42);
+    o.connect(g).connect(AC.destination); o.start(AC.currentTime+t); o.stop(AC.currentTime+t+.45); });
+}
+
+/* =========================================================
+   12. 笔记 + 拍图（坑3：压缩 800px 再存，限张数）
+   ========================================================= */
+let shotData=null;
+window.pickShot=(inp)=>{
+  const f=inp.files&&inp.files[0]; inp.value='';
+  if(!f) return;
+  if(!/^image\//.test(f.type)) return toast('请选择图片文件',true);
+  const r=new FileReader();
+  r.onerror=()=>toast('图片读取失败',true);
+  r.onload=e=>{
+    const img=new Image();
+    img.onerror=()=>toast('图片解析失败，换一张试试',true);
+    img.onload=()=>{
+      const W=800, sc=Math.min(1,W/img.width);
+      const cv=document.createElement('canvas');
+      cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      shotData=cv.toDataURL('image/jpeg',0.7);
+      const el=document.getElementById('shot'); el.src=shotData; el.classList.remove('hide');
+      document.getElementById('dropShot').classList.remove('hide');
+      toast(`已压缩到 ${cv.width}×${cv.height}，约 ${(shotData.length/1024/1.37).toFixed(0)}KB`);
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+};
+window.dropShot=()=>{ shotData=null; document.getElementById('shot').classList.add('hide'); document.getElementById('dropShot').classList.add('hide'); };
+window.addNote=()=>{
+  const tx=document.getElementById('noteTx').value.trim();
+  if(!tx && !shotData) return toast('写点什么，或者拍张图');
+  const imgCount=NOTE.filter(n=>n.img).length;
+  if(shotData && imgCount>=9) return toast('带图笔记最多 9 条（localStorage 只有约 5MB）。先删几条旧的。',true);
+  NOTE.unshift({id:'n'+Date.now(),text:tx,img:shotData,ts:Date.now()});
+  if(!saveAll.note()){ NOTE.shift(); return; }
+  document.getElementById('noteTx').value=''; dropShot(); renderNote(); renderUse(); toast('已保存');
+};
+window.delNote=id=>{ askConfirm('删除这条笔记？',()=>{ NOTE=NOTE.filter(n=>n.id!==id); saveAll.note(); renderNote(); renderUse(); }); };
+function renderNote(){
+  document.getElementById('cNote').textContent=NOTE.length;
+  document.getElementById('noteList').innerHTML = NOTE.length? NOTE.map(n=>`
+    <div class="note">
+      ${n.img?`<img src="${n.img}" alt="笔记配图" onclick="viewImg('${n.id}')">`:''}
+      <div class="bd"><p>${esc(n.text)||'<span style="color:var(--faint)">（仅图片）</span>'}</p>
+        <time>${new Date(n.ts).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time></div>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delNote('${n.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+    </div>`).join('') : `<div class="empty">还没有笔记</div>`;
+}
+window.viewImg=id=>{ const n=NOTE.find(x=>x.id===id); if(n&&n.img) modal(`<h3>图片存档<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3><img src="${n.img}" style="width:100%;border-radius:12px" alt="放大图">`); };
+
+/* =========================================================
+   13. 稍后处理（>3 分钟标灰）
+   ========================================================= */
+function renderLater(){
+  const open=LATER.filter(l=>!l.done);
+  document.getElementById('cLater').textContent=open.length;
+  const list=[...open.sort((a,b)=>a.mins-b.mins), ...LATER.filter(l=>l.done)];
+  document.getElementById('laterList').innerHTML = list.length? list.map(l=>`
+    <div class="lt ${l.mins>3?'long':''} ${l.done?'done':''}">
+      <button class="iconbtn" style="flex:0 0 36px;width:36px;height:36px" onclick="toggleLater('${l.id}')" aria-label="标记已读">
+        <span style="width:18px;height:18px;border:2px solid ${l.done?'#10B981':'#E6E9F2'};background:${l.done?'#10B981':'transparent'};border-radius:5px;display:flex;align-items:center;justify-content:center">${l.done?ico('check',11,'#fff'):''}</span>
+      </button>
+      <div class="bd"><b>${esc(l.title)}</b><span>预计 ${l.mins} 分钟${l.mins>3?' · 需要整块时间':' · 碎片时间可搞定'} · 存了 ${Math.max(0,Math.floor((Date.now()-l.ts)/DAY))} 天</span></div>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delLater('${l.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+    </div>`).join('') : `<div class="empty">清单是空的，很干净 ✨</div>`;
+}
+window.addLater=()=>{
+  const t=document.getElementById('ltTitle').value.trim();
+  const m=Math.max(1,Math.min(180, parseInt(document.getElementById('ltMin').value,10)||3));
+  if(!t) return toast('先填个标题');
+  LATER.unshift({id:'l'+Date.now(),title:t,mins:m,done:false,ts:Date.now()});
+  saveAll.later(); document.getElementById('ltTitle').value=''; document.getElementById('ltMin').value=3;
+  renderLater(); renderUse();
+};
+window.toggleLater=id=>{ const l=LATER.find(x=>x.id===id); if(!l)return; l.done=!l.done; saveAll.later(); renderLater(); };
+window.delLater=id=>{ LATER=LATER.filter(x=>x.id!==id); saveAll.later(); renderLater(); };
+
+/* =========================================================
+   13b. 日记（每天一篇 + 心情标签 + 周/月翻页；数据实时同步给 ai-bridge，小墨可读取）
+   ========================================================= */
+const MOODS=[['happy','开心','#10B981'],['calm','平静','#378ADD'],['tired','疲惫','#EF9F27'],['low','低落','#7F77DD'],['angry','烦躁','#E24B4A']];
+const MOODMAP=Object.fromEntries(MOODS.map(m=>[m[0],{name:m[1],color:m[2]}]));
+let dyMode='month', dyCur=null, dyMood='';   // 视图模式/日历锚点(北京时间0点UTCms)/当前心情
+function todayYMD(){
+  const d=new Date(Date.now()+8*3600e3);   // 北京时间日期
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+}
+function bjDayOf(ms){ return new Date(ms+8*3600e3).getUTCDay(); }   // 北京时间星期几 0=周日
+function ymdUTC(ymd){ const [y,m,d]=ymd.split('-').map(Number); return Date.UTC(y,m-1,d)-8*3600e3; } // 北京时间0点→UTCms
+function dyFind(date){ return DIARY.find(x=>x.date===date); }
+function renderMoods(){
+  const el=document.getElementById('dyMoods'); if(!el) return;
+  el.innerHTML=MOODS.map(([k,n,c])=>`<button class="moodbtn" data-mood="${k}" onclick="pickMood('${k}')" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;border:1.5px solid ${dyMood===k?c:'var(--line)'};background:${dyMood===k?c+'1A':'var(--card)'};color:var(--sub);font-size:12.5px;font-weight:600;cursor:pointer"><i style="width:9px;height:9px;border-radius:50%;background:${c};display:inline-block;flex:0 0 auto"></i>${n}</button>`).join('');
+}
+window.pickMood=k=>{ dyMood=k; renderMoods(); };
+function renderDiary(){
+  const cal=document.getElementById('dyCal'); if(!cal) return;
+  document.getElementById('dyCnt').textContent=DIARY.length+' 篇';
+  const dd=document.getElementById('dyDate'); if(!dd) return;
+  if(!dd.value) dd.value=todayYMD();
+  if(!dyCur) dyCur=new Date(ymdUTC(todayYMD()));
+  const curBJ=dyCur.getTime();
+  document.getElementById('dyModeBtn').textContent = dyMode === 'month' ? '周视图' : '月视图';
+  if(dyMode==='month'){
+    document.getElementById('dyCalTitle').textContent=`${dyCur.getUTCFullYear()}年${dyCur.getUTCMonth()+1}月`;
+    cal.innerHTML=dyMonthCal();
+  } else {
+    const mon=new Date(curBJ); mon.setUTCDate(mon.getUTCDate()-(bjDayOf(curBJ)||7)+1);
+    const sun=new Date(mon.getTime()+6*DAY);
+    document.getElementById('dyCalTitle').textContent=
+      `${mon.getUTCFullYear()}.${pad(mon.getUTCMonth()+1)}.${pad(mon.getUTCDate())} – ${pad(sun.getUTCMonth()+1)}.${pad(sun.getUTCDate())}`;
+    cal.innerHTML=dyWeekCal(mon.getTime());
+  }
+  const sel=dd.value;
+  const sd=dyFind(sel);
+  dyMood=sd&&sd.mood?sd.mood:''; renderMoods();
+  const list=document.getElementById('dyList');
+  const sorted=[...DIARY].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  list.innerHTML = sorted.length? sorted.map(d=>{
+    const md=MOODMAP[d.mood];
+    return `<div class="slot">
+      <div class="bd"><b>${esc(d.date)}${md?` <i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${md.color};vertical-align:middle"></i> ${md.name}`:''}</b><span>${esc(d.text.length>60?d.text.slice(0,60)+'…':d.text)}</span></div>
+      <button class="btn sm ghost" style="flex:0 0 auto" onclick="viewDiary('${esc(d.date)}')">看</button>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delDiary('${esc(d.date)}')" aria-label="删除日记">${ico('x',14,'var(--muted)')}</button>
+    </div>`; }).join('') : `<div class="empty">还没有日记，写第一篇吧 ✍️</div>`;
+}
+function dyMonthCal(){
+  const y=dyCur.getUTCFullYear(), m=dyCur.getUTCMonth();
+  const lead=bjDayOf(Date.UTC(y,m,1)-8*3600e3);
+  const days=new Date(Date.UTC(y,m+1,0)).getUTCDate();
+  const sel=document.getElementById('dyDate').value, today=todayYMD();
+  let h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">';
+  ['日','一','二','三','四','五','六'].forEach(w=>h+=`<div style="text-align:center;font-size:11px;color:var(--faint);padding:3px 0">${w}</div>`);
+  h+='</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+  for(let i=0;i<lead;i++) h+='<div></div>';
+  for(let d=1;d<=days;d++){
+    const date=`${y}-${pad(m+1)}-${pad(d)}`, md=dyFind(date)&&dyFind(date).mood;
+    const active=date===sel;
+    const bg = active?'var(--brand)': md? MOODMAP[md].color+'22' : 'var(--soft)';
+    h+=`<button onclick="pickDay('${date}')" style="position:relative;width:52px;height:52px;border-radius:var(--r-full);margin:0 auto;border:1.5px solid ${date===today?'var(--brand)':'transparent'};background:${bg};color:${active?'#fff':'var(--ink)'};font-size:14px;font-weight:600;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
+      ${d}${md?`<i style="position:absolute;right:5px;bottom:5px;width:6px;height:6px;border-radius:50%;background:${MOODMAP[md].color};display:block"></i>`:''}
+    </button>`;
+  }
+  return h+'</div>';
+}
+function dyWeekCal(monMs){
+  let h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+  for(let i=0;i<7;i++){
+    const ms=monMs+i*DAY, bj=new Date(ms+8*3600e3);
+    const date=`${bj.getUTCFullYear()}-${pad(bj.getUTCMonth()+1)}-${pad(bj.getUTCDate())}`, d=dyFind(date);
+    const active=date===document.getElementById('dyDate').value;
+    h+=`<button onclick="pickDay('${date}')" style="padding:8px 2px;border-radius:var(--r-sm);border:1.5px solid ${active?'var(--brand)':'var(--line)'};background:${active?'var(--brand)':'var(--card)'};color:${active?'#fff':'var(--ink)'};cursor:pointer;text-align:center;min-height:66px;display:flex;flex-direction:column;gap:3px;align-items:center">
+      <span style="font-size:10.5px;opacity:.75">${['日','一','二','三','四','五','六'][bjDayOf(ms)]}</span>
+      <span style="font-size:14px;font-weight:700">${bj.getUTCDate()}</span>
+      ${d&&d.mood?`<i style="width:6px;height:6px;border-radius:50%;background:${MOODMAP[d.mood].color};display:inline-block"></i>`:'<span style="font-size:9px;opacity:.4">—</span>'}
+      <span style="font-size:9px;opacity:.6;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d?esc(d.text.slice(0,4)):' '}</span>
+    </button>`;
+  }
+  return h+'</div>';
+}
+window.dyNav=dir=>{
+  if(dyMode==='month') dyCur=new Date(Date.UTC(dyCur.getUTCFullYear(), dyCur.getUTCMonth()+dir, 1));
+  else dyCur=new Date(dyCur.getTime()+dir*7*DAY);
+  renderDiary();
+};
+window.dyToggleMode=()=>{ dyMode=dyMode==='month'?'week':'month'; renderDiary(); };
+window.pickDay=date=>{
+  document.getElementById('dyDate').value=date;
+  document.getElementById('dyTx').value=dyFind(date)?dyFind(date).text:'';
+  dyMood=dyFind(date)&&dyFind(date).mood||'';
+  renderDiary();
+};
+window.saveDiary=()=>{
+  const date=document.getElementById('dyDate').value||todayYMD();
+  const text=document.getElementById('dyTx').value.trim();
+  if(!text) return toast('写点内容再保存吧',true);
+  const i=DIARY.findIndex(x=>x.date===date);
+  if(i>=0) DIARY[i]={date,text,mood:dyMood,ts:Date.now()}; else DIARY.push({date,text,mood:dyMood,ts:Date.now()});
+  saveAll.diary(); renderDiary();
+  document.getElementById('dyTx').value='';
+  dyMood=''; renderMoods();
+  toast('日记已保存，小墨也看到了');
+};
+window.viewDiary=date=>{
+  const d=dyFind(date); if(!d) return;
+  const md=MOODMAP[d.mood];
+  modal(`<h3>${esc(date)} 的日记${md?` <i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${md.color};vertical-align:middle"></i>${md.name}`:''}<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div style="white-space:pre-wrap;font-size:14px;line-height:1.8;max-height:50vh;overflow:auto;word-break:break-word">${esc(d.text)}</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn pri block" style="flex:2" onclick="editDiary('${esc(date)}')">编辑这篇</button>
+      <button class="btn ghost block" style="flex:1" onclick="closeModal()">关闭</button>
+    </div>`);
+};
+window.editDiary=date=>{
+  closeModal(); const d=dyFind(date); if(!d) return;
+  document.getElementById('dyDate').value=date;
+  document.getElementById('dyTx').value=d.text;
+  dyMood=d.mood||''; renderMoods();
+  document.getElementById('dyTx').focus();
+  toast('已载入，改完点保存');
+};
+window.delDiary=date=>{
+  askConfirm(`删除 ${esc(date)} 的日记？删除后不可恢复。`,()=>{
+    DIARY=DIARY.filter(x=>x.date!==date); saveAll.diary(); renderDiary(); toast('已删除'); },true);
+};
+
+/* =========================================================
+   14. 天气（Open-Meteo，坑5：缓存兜底 + 手动录入）
+   ========================================================= */
+const WMO={0:'晴',1:'晴间多云',2:'多云',3:'阴',45:'雾',48:'雾凇',51:'毛毛雨',53:'小雨',55:'中雨',
+  61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',80:'阵雨',81:'强阵雨',82:'暴雨',95:'雷阵雨',96:'雷雨冰雹'};
+/* 定位我的位置（浏览器 Geolocation；silent=true 为启动时自动定位，静默不打扰；坐标只用于 Open-Meteo 天气查询） */
+window.locateMe=(silent)=>{
+  if(!navigator.geolocation){ if(!silent) toast('此浏览器不支持定位（微信内置浏览器等不行）。可在设置里手动填经纬度。',true); return; }
+  if(!silent) toast('正在定位…');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=Math.round(pos.coords.latitude*1e4)/1e4, lon=Math.round(pos.coords.longitude*1e4)/1e4;
+    SET.lat=lat; SET.lon=lon; SET.city='我的位置';
+    saveAll.set(); fetchWx();
+    if(!silent) toast(`已定位（精度约 ${Math.max(1,Math.round(pos.coords.accuracy))} 米），天气已按当前位置更新`);
+  }, err=>{
+    if(silent) return;   // 启动时静默失败，保持现有坐标
+    const map={1:'定位被拒绝：点浏览器地址栏锁图标 → 允许定位后重试（保持手动坐标）',2:'定位不可用（信号弱），保持手动坐标',3:'定位超时，保持手动坐标'};
+    toast(map[err.code]||('定位失败：'+(err.message||'未知')), true);
+  }, {timeout:10000, maximumAge:600000});
+};
+async function fetchWx(){
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${SET.lat}&longitude=${SET.lon}`+
+    `&current=temperature_2m,weather_code,apparent_temperature&hourly=precipitation_probability,temperature_2m,weather_code`+
+    `&timezone=Asia%2FShanghai&forecast_days=2`;
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),9000);
+  try{
+    const r=await fetch(url,{signal:ctl.signal});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    WX={ t:Math.round(j.current.temperature_2m), feel:Math.round(j.current.apparent_temperature),
+         code:j.current.weather_code, times:j.hourly.time, pop:j.hourly.precipitation_probability,
+         temp:j.hourly.temperature_2m, utc:j.utc_offset_seconds, at:Date.now(), manual:false };
+    saveAll.wx();
+  }catch(e){
+    if(!WX) WX={ t:null, at:0, fail:true };
+    else WX.stale=true;
+  }finally{ clearTimeout(to); renderWx(); renderClock(); }
+}
+function next3h(){
+  if(!WX||!WX.times) return [];
+  const now=Date.now(), out=[];
+  for(let i=0;i<WX.times.length && out.length<6;i++){
+    const t=new Date(WX.times[i]).getTime();
+    if(t>=now-1800e3) out.push({t,pop:WX.pop[i],temp:WX.temp[i]});
+  }
+  return out;
+}
+function classEndTip(){
+  const list=todayCls(), nowM=new Date().getHours()*60+new Date().getMinutes();
+  const nx=list.find(c=>toMin(c.e)>nowM);
+  if(!nx) return null;
+  const h=next3h();
+  const endAt=new Date(); endAt.setHours(...nx.e.split(':').map(Number),0,0);
+  const near=h.reduce((a,b)=>Math.abs(b.t-endAt)<Math.abs(a.t-endAt)?b:a, h[0]);
+  if(!near) return null;
+  return { cls:nx, pop:near.pop,
+    tip: near.pop>=60 ? `${nx.e} 下课时降雨概率 ${near.pop}%，出门带伞` :
+         near.pop>=30 ? `${nx.e} 下课可能有零星雨（${near.pop}%），伞放包里` :
+                        `${nx.e} 下课天气还行（降雨 ${near.pop}%）` };
+}
+function renderWx(){
+  const el=document.getElementById('tbWx');
+  if(!WX || WX.t===null){
+    el.innerHTML=`<span class="tb-ico">${ico('cloud',19)}</span><div class="tb-tx"><b>天气获取中…</b><span>点这里可手动填</span></div>`;
+    document.getElementById('pWx').innerHTML=`<b style="font-size:14px">天气</b>
+      <div style="font-size:13px;color:var(--sub);margin-top:6px">联网失败，也没有历史缓存。可能是断网、或浏览器拦了请求。</div>
+      <div class="row" style="margin-top:11px"><button class="btn sm" onclick="fetchWx()">重试</button><button class="btn sm ghost" onclick="locateMe()">定位我的位置</button><button class="btn sm ghost" onclick="manualWx()">手动填写</button></div>`;
+    return;
+  }
+  const d=WMO[WX.code]||'—';
+  const h=next3h(), maxPop=h.length?Math.max(...h.slice(0,4).map(x=>x.pop)):0;
+  const stale = WX.stale || (Date.now()-WX.at > 3*3600e3);
+  el.innerHTML=`<span class="tb-ico">${ico(maxPop>=50?'drop':'cloud',19)}</span>
+    <div class="tb-tx"><b>${WX.t}° ${d}${stale?' ·旧':''}</b>
+    <span>${maxPop>=50?`3h内 ${maxPop}% 降雨`:maxPop>=25?`可能零星雨 ${maxPop}%`:'未来 3 小时无雨'}</span></div>`;
+
+  // 3 小时降雨趋势（内联 SVG 手写柱状图）
+  const bars=h.slice(0,6);
+  const W=300,H=88,bw=W/Math.max(1,bars.length);
+  let svg=`<svg viewBox="0 0 ${W} ${H+26}" width="100%" height="${H+26}" role="img" aria-label="降雨概率趋势">`;
+  svg+=`<line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="#E6E9F2" stroke-width="1"/>`;
+  bars.forEach((b,i)=>{
+    const bh=Math.max(2,(b.pop/100)*(H-14));
+    const x=i*bw+bw*0.22, w=bw*0.56;
+    const col = b.pop>=60?'#EF4444' : b.pop>=30?'#F59E0B' : '#C7CBDA';
+    svg+=`<rect x="${x.toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${col}"/>`;
+    svg+=`<text x="${(i*bw+bw/2).toFixed(1)}" y="${(H-bh-4).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--sub)">${b.pop}%</text>`;
+    svg+=`<text x="${(i*bw+bw/2).toFixed(1)}" y="${H+14}" text-anchor="middle" font-size="10" fill="var(--muted)">${pad(new Date(b.t).getHours())}时</text>`;
+    svg+=`<text x="${(i*bw+bw/2).toFixed(1)}" y="${H+24}" text-anchor="middle" font-size="9" fill="#C7CBDA">${Math.round(b.temp)}°</text>`;
+  });
+  svg+='</svg>';
+  const tip=classEndTip();
+  document.getElementById('pWx').innerHTML=
+    `<div style="display:flex;align-items:baseline;gap:9px"><b style="font-size:14px">${esc(SET.city)} · ${WX.t}° ${d}</b>
+      <span style="font-size:12px;color:var(--faint)">体感 ${WX.feel!=null?WX.feel+'°':'—'} · ${new Date(WX.at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}更新${stale?'（可能过期）':''}</span></div>
+     <div style="font-size:12px;color:var(--sub);margin-top:9px;font-weight:600">未来数小时降雨概率</div>
+     ${svg}
+     ${tip?`<div style="margin-top:10px;background:${tip.pop>=60?'var(--danger-soft)':'var(--soft)'};color:${tip.pop>=60?'var(--danger)':'var(--brand)'};padding:9px 12px;border-radius:10px;font-size:13px;font-weight:600">${ico('bell',13)} 下课提醒：${esc(tip.tip)}</div>`:''}
+     <div class="row" style="margin-top:11px"><button class="btn sm ghost" onclick="fetchWx()">刷新</button><button class="btn sm ghost" onclick="locateMe()">定位我的位置</button><button class="btn sm ghost" onclick="manualWx()">手动填写</button></div>
+     <div style="font-size:11px;color:var(--faint);margin-top:8px">数据源 Open-Meteo（免费无需 key）。断网时显示上次缓存并标注「旧」。</div>`;
+}
+window.fetchWx=fetchWx;
+window.manualWx=()=>{
+  modal(`<h3>${ico('cloud',18)} 手动填天气<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div class="fld"><label>当前温度 °C</label><input id="mwT" type="number" value="${WX&&WX.t!=null?WX.t:26}"></div>
+    <div class="fld"><label>天气</label><select id="mwC">${Object.entries(WMO).map(([k,v])=>`<option value="${k}" ${WX&&+WX.code===+k?'selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="fld"><label>未来 3 小时降雨概率 %（逗号分隔，如 10,20,60）</label><input id="mwP" value="10,20,30"></div>
+    <button class="btn pri block" onclick="saveManualWx()">保存</button>`);
+};
+window.saveManualWx=()=>{
+  const t=+document.getElementById('mwT').value, c=+document.getElementById('mwC').value;
+  const pops=document.getElementById('mwP').value.split(',').map(x=>Math.max(0,Math.min(100,parseInt(x,10)||0)));
+  const now=new Date(); now.setMinutes(0,0,0);
+  WX={ t,feel:t,code:c, times:pops.map((_,i)=>new Date(now.getTime()+i*3600e3).toISOString()),
+       pop:pops, temp:pops.map(()=>t), at:Date.now(), manual:true };
+  saveAll.wx(); closeModal(); renderWx(); toast('已手动更新');
+};
+
+/* =========================================================
+   15. 睡眠建议
+   ========================================================= */
+function tomorrowFirst(){
+  const d=(new Date().getDay()+1)%7;
+  return CLS.filter(c=>c.day===d).sort((a,b)=>toMin(a.s)-toMin(b.s))[0]||null;
+}
+function sleepPlan(){
+  const f=tomorrowFirst();
+  const wakeM = f ? toMin(f.s) - (+SET.commuteMin||15) - (+SET.prepMin||40) : 8*60;
+  let bedM = wakeM - Math.round((+SET.sleepH||7.5)*60);
+  while(bedM<0) bedM+=1440;
+  return { f, wake:`${pad(Math.floor(wakeM/60))}:${pad(wakeM%60)}`, bed:`${pad(Math.floor(bedM/60)%24)}:${pad(bedM%60)}`, bedM };
+}
+function renderSleep(){
+  const p=sleepPlan(), now=new Date().getHours()*60+new Date().getMinutes();
+  let urgency=''; const bedToday = p.bedM>=18*60 ? p.bedM : p.bedM+1440;
+  const diff = bedToday - now;
+  if(diff<=0 && diff>-300) urgency='该睡了';
+  else if(diff>0 && diff<=60) urgency=`还有 ${diff} 分钟`;
+  document.getElementById('tbSleep').innerHTML=
+    `<span class="tb-ico">${ico('moon',19)}</span><div class="tb-tx"><b>${p.bed} 入睡</b>
+     <span>${urgency||(p.f?`明早 ${p.f.s} ${p.f.name}`:'明天没课')}</span></div>`;
+  document.getElementById('pSleep').innerHTML=
+    `<b style="font-size:14px">今晚睡眠建议</b>
+     <div style="display:flex;gap:14px;margin-top:11px;flex-wrap:wrap">
+       <div style="flex:1;min-width:110px;background:var(--soft);border-radius:12px;padding:12px">
+         <div style="font-size:11.5px;color:var(--brand);font-weight:700">建议入睡</div>
+         <div style="font-size:26px;font-weight:800;color:var(--brand)">${p.bed}</div></div>
+       <div style="flex:1;min-width:110px;background:var(--well);border-radius:12px;padding:12px">
+         <div style="font-size:11.5px;color:var(--sub);font-weight:700">该起床</div>
+         <div style="font-size:26px;font-weight:800">${p.wake}</div></div>
+     </div>
+     <div style="font-size:13px;color:var(--sub);margin-top:11px;line-height:1.75">
+       ${p.f?`明天（${DAYNAME[(new Date().getDay()+1)%7]}）第一节 <b>${esc(p.f.name)}</b> ${p.f.s} 在 ${esc(p.f.room||'')}。`:'明天没有课，可以放松一点。'}<br>
+       倒推：起床 ${p.wake} ← 洗漱吃饭 ${SET.prepMin} 分 + 路上 ${SET.commuteMin} 分；睡够 ${SET.sleepH} 小时 → ${p.bed} 上床。
+     </div>
+     <div style="font-size:11px;color:var(--faint);margin-top:9px">睡眠时长 / 准备 / 通勤 时间可在右上角设置里调。</div>`;
+}
+
+/* =========================================================
+   16. 今天要处理（铁律5：置顶、逾期标红、一键处理、自动顺延）
+   ========================================================= */
+function renderTodayBox(){
+  const now=Date.now(), items=[];
+  DDL.filter(d=>!d.done).forEach(d=>{
+    const ms=d.due-now;
+    if(ms<=0) items.push({p:0,dot:'red',t:d.title,s:`${d.course} · 已逾期 ${fmtLeft(-ms)}，昨天没做完自动留在今天`,red:true,act:'完成',fn:`toggleDdl('${d.id}')`});
+    else if(ms<=DAY) items.push({p:1,dot:'red',t:d.title,s:`${d.course} · 只剩 ${fmtLeft(ms)}`,red:true,act:'完成',fn:`toggleDdl('${d.id}')`});
+    else if(ms<=3*DAY) items.push({p:2,dot:'org',t:d.title,s:`${d.course} · 还有 ${fmtLeft(ms)}`,act:'完成',fn:`toggleDdl('${d.id}')`});
+  });
+  const n=nextCls();
+  if(n && n.off===0) items.push({p:3,dot:'',t:(n.live?'正在上：':'马上上课：')+n.c.name, s:`${n.c.s}–${n.c.e} · ${n.c.room||''}`,act:'专注',fn:'pomoStart()'});
+  LATER.filter(l=>!l.done && l.mins<=3).slice(0,2).forEach(l=>
+    items.push({p:4,dot:'gry',t:l.title,s:`碎片时间就能读完（${l.mins} 分钟）`,act:'已读',fn:`toggleLater('${l.id}')`}));
+  LATER.filter(l=>!l.done && Date.now()-l.ts>7*DAY).slice(0,1).forEach(l=>
+    items.push({p:5,dot:'gry',t:l.title,s:`存了 ${Math.floor((Date.now()-l.ts)/DAY)} 天还没读，要不删掉？`,act:'已读',fn:`toggleLater('${l.id}')`}));
+
+  // 快递待取（逾期 / 3 天内到期）—— 快到期的条目也进「今天要处理」
+  EXPR.filter(e=>!e.got && e.due).forEach(e=>{
+    const ms=e.due-now;
+    if(ms<=0) items.push({p:0,dot:'red',t:`取快递：${e.company} ${e.code}`,s:`已过期还没取，快去拿`,red:true,act:'已取',fn:`toggleExpr('${e.id}')`});
+    else if(ms<=3*DAY) items.push({p:2,dot:'org',t:`取快递：${e.company} ${e.code}`,s:`还有 ${fmtLeft(ms)} 到期`,act:'已取',fn:`toggleExpr('${e.id}')`});
+  });
+
+  // 习惯打卡（今天还没打的，提醒一下，最多 3 条）
+  HABIT.filter(h=>!h.logs.some(l=>ymd(new Date(l))===ymd(new Date()))).slice(0,3).forEach(h=>
+    items.push({p:4,dot:'gry',t:`打卡：${h.name}`,s:`连续 ${streakOf(h).cur} 天，今天还没打`,act:'打卡',fn:`toggleHabitToday('${h.id}')`}));
+
+  items.sort((a,b)=>a.p-b.p);
+  const box=document.getElementById('today');
+  const hasOver=items.some(i=>i.p===0);
+  box.className = hasOver?'hasOverdue':'';
+  box.innerHTML = `<h3>${ico('bell',16,hasOver?'#EF4444':'var(--brand)')} 今天要处理
+      <span class="pill ${hasOver?'red':''}" style="margin-left:auto">${items.length} 项</span></h3>` +
+    (items.length? items.slice(0,8).map(i=>`
+      <div class="tditem"><span class="tddot ${i.dot}"></span>
+        <div class="tdtx"><b>${esc(i.t)}</b><span class="${i.red?'red':''}">${esc(i.s)}</span></div>
+        <button class="btn sm" onclick="${i.fn}">${i.act}</button></div>`).join('')
+      : `<div class="empty">今天没有紧急事项，可以推推长期任务 🌤</div>`);
+}
+
+/* =========================================================
+   17. AI 悬浮球
+   ========================================================= */
+const orb=document.getElementById('orb'), panel=document.getElementById('panel'), bubble=document.getElementById('bubble');
+orb.innerHTML=ico('spark',25,'#fff');
+document.getElementById('i14').innerHTML=ico('spark',19,'var(--brand)');
+document.getElementById('i15').innerHTML=ico('brain',18);
+document.getElementById('i16').innerHTML=ico('x',18);
+document.getElementById('i17').innerHTML=ico('cloud',18);
+document.getElementById('micBtn').innerHTML=ico('mic',19);
+document.querySelector('#pin button[aria-label="发送"]').innerHTML=ico('send',18,'#fff');
+
+/* --- 拖动（原生 Pointer Events，吸边） --- */
+let orbPos=load('orbPos',null);
+function placeOrb(){
+  const w=innerWidth,h=innerHeight,S=58,M=12;
+  if(!orbPos) orbPos={x:w-S-14,y:h-S-96};
+  orbPos.x=Math.max(M,Math.min(w-S-M,orbPos.x));
+  orbPos.y=Math.max(M+ (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0), Math.min(h-S-M,orbPos.y));
+  orb.style.left=orbPos.x+'px'; orb.style.top=orbPos.y+'px';
+}
+let drag=null;
+orb.addEventListener('pointerdown',e=>{
+  orb.setPointerCapture(e.pointerId);
+  drag={sx:e.clientX,sy:e.clientY,ox:orbPos.x,oy:orbPos.y,moved:false};
+});
+orb.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+  if(Math.abs(dx)>4||Math.abs(dy)>4) drag.moved=true;
+  orbPos.x=drag.ox+dx; orbPos.y=drag.oy+dy; placeOrb();
+});
+orb.addEventListener('pointerup',e=>{
+  if(!drag) return;
+  const moved=drag.moved; drag=null;
+  if(moved){ orbPos.x = orbPos.x+29 < innerWidth/2 ? 12 : innerWidth-70; placeOrb(); save('orbPos',orbPos); }
+  else togglePanelAI();
+});
+orb.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); togglePanelAI(); } });
+addEventListener('resize',placeOrb);
+
+function togglePanelAI(force){
+  const show = force===undefined ? panel.classList.contains('hide') : force;
+  panel.classList.toggle('hide',!show);
+  bubble.classList.add('hide');
+  const d=document.getElementById('orbDot'); if(d) d.remove();
+  if(show){ renderChat(); renderChips(); setTimeout(()=>document.getElementById('chat').scrollTop=1e6,30); }
+}
+window.togglePanelAI=togglePanelAI;
+
+/* --- 记忆 --- */
+function memPush(role,text){
+  MEM.chat.push({r:role,t:text,ts:Date.now()});
+  if(MEM.chat.length>120) MEM.chat=MEM.chat.slice(-120);
+  saveAll.mem();
+}
+function renderChat(){
+  const c=document.getElementById('chat');
+  const list=MEM.chat.slice(-40);
+  c.innerHTML = list.length? list.map(m=>`<div class="msg ${m.r==='u'?'u':'a'}">${esc(m.t)}</div>`).join('')
+    : `<div class="msg a">嗨${SET.name?'，'+esc(SET.name):''}。我是小墨，住在这个球里。\n\n你可以问我「今天要干嘛」「下节课」「还剩几天考试」，或者让我「开始专注 30 分钟」「记一下：明天带图纸」。\n\n想让我记住什么，就说「记住 xxx」。`;
+  c.scrollTop=1e6;
+}
+function renderChips(){}
+window.quick=t=>{ document.getElementById('pinTx').value=t; sendMsg(); };
+function aiSay(text,bubbleOnly){
+  memPush('a',text);
+  if(panel.classList.contains('hide')){
+    bubble.textContent=text.length>78?text.slice(0,78)+'…':text;
+    bubble.classList.remove('hide');
+    const bw=Math.min(230, innerWidth-28);
+    bubble.style.left = Math.max(12, Math.min(innerWidth-bw-12, orbPos.x+29-bw/2))+'px';
+    bubble.style.top  = Math.max(12, orbPos.y-bubble.offsetHeight-12)+'px';
+    orb.classList.add('pulse');
+    clearTimeout(aiSay._t); aiSay._t=setTimeout(()=>{ bubble.classList.add('hide'); orb.classList.remove('pulse'); }, 9000);
+  } else renderChat();
+}
+bubble.addEventListener('click',()=>togglePanelAI(true));
+
+/* --- 规则引擎（本地，不联网） --- */
+function brain(q){
+  /* 动作直连层：只处理"执行动作"（AI 说了不算数），文字回复全部交给 AI */
+  const s=q.trim();
+  const isQuery=/(是什么|什么是|啥|是啥|工作法|方法|意思|怎么回事|推荐|介绍|怎么|如何)/.test(s);   // 查询类放行给 AI
+  // 专注（执行）：明确指令才触发；"番茄钟是什么"类查询走 AI
+  let m=s.match(/专注\s*(\d+)?\s*分?/) || s.match(/(\d+)\s*分钟?专注/);
+  if(!isQuery && (/(?:^|\s)专注|^开始\s*番茄|番茄钟\s*(?:开始|启动)|(\d+)\s*分钟?\s*专注/.test(s))){
+    const n=m&&m[1]?Math.min(120,Math.max(5,+m[1])):null;
+    if(n){ SET.planMin=n; saveAll.set(); }
+    setTimeout(()=>window.pomoStart(),260);
+    return `好，${SET.planMin} 分钟专注开始。全屏遮罩已经罩上了，切走页面我会记一次分心。`;
+  }
+  if(!isQuery && /(雨声|白噪|噪音)/.test(s)){ setTimeout(()=>noisePlay('rain'),200); return '雨声开了，音量在番茄钟那块可以切。'; }
+  // 打卡命令（执行）
+  m=s.match(/^打卡\s+(.+)$/);
+  if(m){
+    const name=m[1].trim(); const h=HABIT.find(x=>x.name.includes(name)||name.includes(x.name));
+    if(!h) return null;   // 没找到 → 交 AI 处理
+    const done=h.logs.some(l=>ymd(new Date(l))===ymd(new Date()));
+    if(done) return `「${h.name}」今天已经打过卡啦，连续 ${streakOf(h).cur} 天 🔥`;
+    checkHabitToday(h.id);
+    return `「${h.name}」打卡成功，连续 ${streakOf(h).cur} 天 🔥`;
+  }
+  // 记笔记（执行）
+  m=s.match(/^(笔记|记笔记)[:：,，\s]*(.+)$/);
+  if(m){ NOTE.unshift({id:'n'+Date.now(),text:m[2].trim(),img:null,ts:Date.now()}); saveAll.note(); renderNote(); return '记到笔记里了。'; }
+  return null;   // 其余全部交 AI
+}
+/* =========================================================
+   AI 直连模式（网页版）：浏览器直接调 DeepSeek，无需本地桥
+   配置存 localStorage：wb_deck_ai = {mode, baseURL, model, apiKey, searchKey}
+   mode: 'direct' 直连 | 'bridge' 本地桥（默认）
+   ========================================================= */
+function bjISO(ms){ const d=new Date((ms==null?Date.now():ms)+8*3600e3); return d.toISOString().replace('T',' ').slice(0,19); }
+function aiCfg(){
+  const c=load('ai', {});
+  const m=c.mode==='direct'?'direct':'bridge';
+  return { mode:m, baseURL:(c.baseURL||'https://api.deepseek.com/v1').replace(/\/+$/,''),
+    model:c.model||'deepseek-chat', apiKey:c.apiKey||'', searchKey:c.searchKey||'', set:!!c.apiKey };
+}
+function aiSaveCfg(c){ save('ai', Object.assign(load('ai',{}), c)); }
+/* 前端工具层：数据直接用工作台内存变量（比桥更直接，改动即时生效） */
+function aiToolInfo(name, argsObj){
+  const t=argsObj||{}, now=Date.now(), ymd0=ymd(new Date());
+  const j=o=>JSON.stringify(o);
+  switch(name){
+    case 'get_today': {
+      const w=curWeek();
+      const clsToday=CLS.filter(c=>c.day===new Date().getDay()).sort((a,b)=>toMin(a.s)-toMin(b.s));
+      const nx=nextClassInfo();
+      const ddl=DDL.filter(d=>!d.done).map(d=>({title:d.title, due:d.due, status:d.due&&d.due<now?'overdue':d.due&&d.due-now<=3*DAY?'soon':'ok'}));
+      const expr=EXPR.filter(e=>!e.got).map(e=>({company:e.company,code:e.code,loc:e.loc,due:e.due}));
+      const hab=HABIT.map(h=>{ const s=streakOf(h); return {name:h.name, streak:s.cur, done:s.done}; });
+      return j({ date:bjISO().slice(0,10), weekday:DAYNAME[new Date().getDay()], week:w,
+        classes:clsToday.map(c=>`${c.s}-${c.e} ${c.name}${c.room?' '+c.room:''}`),
+        next:nx?`${nx.name} ${nx.s}${nx.off===0?'（今天）':nx.off===1?'（明天）':''}${nx.live?'·进行中':''}`:null,
+        ddl:ddl.slice(0,5).map(d=>`${d.title}（${d.status==='overdue'?'已逾期':fmtLeft(d.due-now)}）`),
+        express:expr.slice(0,3).map(e=>`${e.company} ${e.code}`),
+        habits:hab.slice(0,3).map(h=>`${h.name}${h.done?' ✓已打':' 未打'}`) });
+    }
+    case 'get_next_class': { const n=nextClassInfo(); return n?j(n):'今天到下周都没有课'; }
+    case 'get_ddl': {
+      const l=DDL.filter(d=>!d.done).map(d=>({title:d.title,course:d.course,due:d.due,status:d.due&&d.due<now?'overdue':d.due&&d.due-now<=24*3600e3?'urgent':d.due&&d.due-now<=3*DAY?'soon':'ok'}));
+      if(t.status==='overdue') return j(l.filter(x=>x.status==='overdue'));
+      if(t.status==='urgent') return j(l.filter(x=>x.status==='urgent'));
+      if(t.status==='soon') return j(l.filter(x=>x.status==='soon'||x.status==='urgent'));
+      return l.length?j(l):'没有符合条件的作业';
+    }
+    case 'get_wallet': {
+      const spent=WALLET.filter(w=>w.type==='exp').reduce((s,w)=>s+w.amount,0);
+      const income=WALLET.filter(w=>w.type==='inc').reduce((s,w)=>s+w.amount,0);
+      return `预算 ¥${SET.bud}，已花 ¥${Math.round(spent*100)/100}，剩余 ¥${Math.round((SET.bud+income-spent)*100)/100}${income?'（含收入 ¥'+income+'）':''}。最近：`+
+        (WALLET.slice(0,5).map(w=>`${w.type==='inc'?'+':'-'}¥${w.amount} ${w.note||w.cat}（${ymd(new Date(w.ts))}）`).join('，')||'暂无记录');
+    }
+    case 'get_express': {
+      const l=EXPR.filter(e=>!e.got).map(e=>({company:e.company,code:e.code,loc:e.loc,due:e.due,status:e.due&&e.due<now?'overdue':e.due&&e.due-now<=3*DAY?'soon':'ok'}));
+      return l.length?j(l):'没有待取快递';
+    }
+    case 'get_habit': {
+      const l=HABIT.map(h=>{ const s=streakOf(h); return `${h.name} 连续 ${s.cur} 天${s.done?'（今天已打）':'（今天未打）'}`; });
+      return l.length?l.join('；'):'还没有习惯';
+    }
+    case 'get_weather': return WX&&WX.t!=null?`温度 ${WX.t}°C（体感 ${WX.feel}°C），天气码 ${WX.code}，更新于 ${WX.at?ymd(new Date(WX.at)):''}`:'工作台还没有天气数据';
+    case 'get_memo': { const m=(MEM.facts||[]).map(f=>f.t); return m.length?m.map((x,i)=>`${i+1}. ${x}`).join('\n'):'还没有长期记忆'; }
+    case 'save_memo': {
+      const txt=String(t.text||'').trim().slice(0,200);
+      if(!txt) return '内容为空，没保存';
+      if((MEM.facts||[]).some(f=>String(f.t)===txt)) return '这条之前已经记住了';
+      MEM.facts.push({t:txt,ts:Date.now()}); if(MEM.facts.length>100)MEM.facts=MEM.facts.slice(-100);
+      saveAll.mem(); return '已保存到长期记忆：'+txt;
+    }
+    case 'get_diary': {
+      if(!DIARY.length) return '用户还没有写过日记';
+      const moodTxt={happy:'开心',calm:'平静',tired:'疲惫',low:'低落',angry:'烦躁'};
+      const fmt=d=>`${d.date}${d.mood&&moodTxt[d.mood]?`（心情：${moodTxt[d.mood]}）`:''}：${String(d.text).slice(0,120)}${String(d.text).length>120?'…':''}`;
+      const list=DIARY.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+      if(t.date){ const d=list.find(x=>String(x.date)===String(t.date)); return d?fmt(d):`${t.date} 没有日记`; }
+      return list.slice(0,5).map(fmt).join('\n\n');
+    }
+    case 'act': {
+      // 直接执行工作台操作（与桥模式不同：直连模式立刻落库，无需回传 actions）
+      const a={ action:String(t.action||''), data:t.data&&typeof t.data==='object'?t.data:{} };
+      const ACTS={ add_habit:['name'],add_ddl:['title'],add_later:['title'],add_note:['text'],add_express:['company','code'],
+        add_wallet:['amount'],add_diary:['text'],add_cls:['name','day','s','e'],del_habit:['name'],del_ddl:['title'],
+        del_later:['title'],del_note:['text'],del_expr:['code'] };
+      const d=a.data;
+      if(!ACTS[a.action]) return '未知动作：'+a.action;
+      for(const k of ACTS[a.action]){ const v=d[k]; if(v==null||String(v).trim()==='') return `参数缺失：${k}`; }
+      if(a.action==='add_wallet'&&!(Math.abs(Number(d.amount))>0)) return '金额不合法';
+      applyAction(a); return '已执行：'+a.action;
+    }
+    case 'web_search': {
+      // 浏览器直连 Tavily：有 key 用 key，无 key 走 keyless（免费限流，免注册）
+      return aiSearchTavily(String(t.query||''));
+    }
+    default: return '未知工具 '+name;
+  }
+}
+function nextClassInfo(){
+  const now=new Date(), today=now.getDay();
+  const mm=now.getHours()*60+now.getMinutes();
+  const live=CLS.find(c=>c.day===today&&toMin(c.s)<=mm&&mm<toMin(c.e));
+  if(live) return {name:live.name,s:live.s,e:live.e,room:live.room,off:0,live:true};
+  for(let off=0;off<=7;off++){
+    const d=(today+off)%7;
+    const c=CLS.filter(x=>x.day===d).sort((a,b)=>toMin(a.s)-toMin(b.s))[0];
+    if(c){ const at=new Date(); at.setDate(at.getDate()+off); at.setHours(toMin(c.s)/60|0,toMin(c.s)%60,0,0);
+      return {name:c.name,s:c.s,e:c.e,room:c.room,off,at:at.getTime(),live:false}; }
+  }
+  return null;
+}
+async function aiSearchTavily(q){
+  try{
+    const c=aiCfg();
+    const headers={'Content-Type':'application/json'};
+    const body={query:String(q||'').slice(0,200),max_results:5,search_depth:'basic'};
+    if(c.searchKey) body.api_key=c.searchKey;
+    else headers['X-Tavily-Access-Mode']='keyless';
+    const r=await fetch('https://api.tavily.com/search',{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(9000)});
+    if(!r.ok) return '搜索服务暂时不可用（'+r.status+'），稍后再试。';
+    const j=await r.json();
+    return (j.results||[]).map(x=>`${x.title}\n${x.content||''}（${x.url}）`).join('\n\n')||'没有搜到相关内容';
+  }catch(e){ return '搜索失败：'+(e&&e.message||'网络错误'); }
+}
+/* AI 直连对话引擎：浏览器直接调 DeepSeek function calling 循环 */
+const AI_TOOLS=[
+  {type:'function',function:{name:'get_today',description:'今天整体安排：日期星期、第几周、今天课程、下一节课、作业、快递、习惯打卡',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_next_class',description:'下一节课（名称/时间/教室/是否今天/是否进行中）',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_ddl',description:'作业截止清单，可按状态过滤',parameters:{type:'object',properties:{status:{type:'string',enum:['overdue','urgent','soon'],description:'overdue已逾期/urgent24小时内/soon3天内'}}}}},
+  {type:'function',function:{name:'get_wallet',description:'生活费：预算/已花/剩余/最近记录',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_express',description:'待取快递列表（含取件码/位置/是否快过期）',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_habit',description:'习惯打卡连续天数（哪些今天已打/未打）',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_weather',description:'工作台缓存的当前天气',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_memo',description:'用户让小墨记住的长期记忆',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'save_memo',description:'保存一条长期记忆。当用户提到重要个人信息（名字/生日/学校）、目标、计划、偏好、重要事件时主动调用，让它跨会话记住',parameters:{type:'object',properties:{text:{type:'string',description:'要记住的内容，一句话，≤200字'}},required:['text']}}},
+  {type:'function',function:{name:'get_diary',description:'用户的日记（不传日期=最近5篇；可传 YYYY-MM-DD 查某天）',parameters:{type:'object',properties:{date:{type:'string',description:'可选，格式 YYYY-MM-DD'}}}}},
+  {type:'function',function:{name:'web_search',description:'联网搜索实时信息（新闻/百科/知识等），结果按来源附注',parameters:{type:'object',properties:{query:{type:'string',description:'搜索关键词'}},required:['query']}}},
+  {type:'function',function:{name:'act',description:'帮用户操作工作台数据（新增/删除）。action 取值：add_habit{name,color?,days?}/add_ddl{title,course?,due?}/add_later{title,mins?}/add_note{text}/add_express{company,code,loc?,note?}/add_wallet{type:exp|inc,amount,cat?,note?}/add_diary{date?,text,mood?}/add_cls{day(0-6),s,e,name,room?}/del_habit{name}/del_ddl{title}/del_later{title}/del_note{text}/del_expr{code}。规则：用户明确要求新增/删除数据时才调用；due 用 YYYY-MM-DD，s/e 用 HH:MM',parameters:{type:'object',properties:{action:{type:'string',description:'动作名'},data:{type:'object',description:'动作参数'}},required:['action','data']}}}
+];
+function aiSysPrompt(){
+  const facts=(MEM.facts||[]).slice(-40).map(f=>String(f.t).slice(0,120));
+  return `你是「小墨」，一个跑在学生个人工作台里的 AI 智能体助手。用户是建筑工程类专业学生。
+当前时间（北京时间）：${bjISO()}。所有涉及日期时间的回答都以这个时间为准，不要编造时间。
+你可以调用工具获取用户工作台的实时数据（课表/作业/生活费/快递/习惯/天气/记忆/日记），也可以联网搜索。
+规则：
+1. 凡涉及用户的课表/作业/生活费/快递/习惯/日记/记忆/今日安排，必须调用对应工具查真实数据再回答，不要凭空编造数字。
+2. 回答简洁、口语化，直接给结论和下一步建议；数据为空时如实说明"还没有数据"。
+3. 用户只是闲聊/问知识类问题时，直接用你的知识回答，不必调用工具。
+4. 主动记忆：识别到"重要消息"必须调用 save_memo 保存——包括用户真实姓名/生日/学校专业/家庭信息；考试、面试、实习、请假等安排（含日期）；长期目标与计划；明确的个人偏好；用户要求记住的任何话；承诺要做的事。普通闲聊不要存。
+5. 操作数据：用户明确要求"帮我加/记/新增/写/删掉"某数据时，必须调用 act 工具让工作台执行，禁止只口头回复"已添加"而不调工具。消费记账（如"花了 N 元/块钱"）默认调 act add_wallet 记支出。删除类（del_*）用户直接说"删掉/删除 xxx"即视为已授权。用户只是随口提没有明确要求操作时不要调 act。
+${facts.length?`\n已保存的长期记忆（说话时优先参考，不要与记忆矛盾）：\n${facts.map((x,i)=>`${i+1}. ${x}`).join('\n')}`:''}`;
+}
+async function aiDirect(text){
+  const c=aiCfg();
+  if(!c.apiKey) return '还没配 API Key。点 AI 面板的云图标 → 填 Key → 测试 → 保存。';
+  const memo_saved=[];
+  const hist=(MEM.chat||[]).slice(-16).map(m=>({role:m.r==='u'?'user':'assistant',content:m.t}));
+  const msgs=[{role:'system',content:aiSysPrompt()}].concat(hist,[{role:'user',content:text}]);
+  const body={model:c.model,messages:msgs,tools:AI_TOOLS,tool_choice:'auto',temperature:0.6,max_tokens:900};
+  const chatUrl=c.baseURL.replace(/\/+$/,'')+'/chat/completions';
+  for(let i=0;i<5;i++){
+    let r;
+    try{
+      r=await fetch(chatUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.apiKey},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
+    }catch(e){ const m=e&&e.message||'网络错误'; const hint=/Failed to fetch|NetworkError|TypeError/.test(String(m)) ? '（浏览器拦截了跨域：在预览沙箱里测会被禁。请用浏览器打开公网链接，或双击本地 workbench.html）' : ''; return 'AI 服务连不上（检查网络，或 Key/地址是否正确）。详情：'+m+hint; }
+    if(!r.ok){ const txt=await r.text().catch(()=>''); let msg='HTTP '+r.status;
+      try{ const j=JSON.parse(txt); if(j&&j.error&&j.error.message) msg=j.error.message; }catch(e){}
+      return 'AI 调用失败（'+r.status+'）：'+msg.slice(0,150); }
+    const j=await r.json();
+    const msg=j.choices&&j.choices[0]&&j.choices[0].message;
+    const calls=msg&&msg.tool_calls;
+    if(!calls||!calls.length){
+      if(memo_saved.length){ let added=0;
+        memo_saved.forEach(t=>{ if(t&&!MEM.facts.some(f=>f.t===t)){ MEM.facts.push({t,ts:Date.now()}); added++; } });
+        if(added){ saveAll.mem(); toast('小墨记住了：'+memo_saved[0].slice(0,24)+(added>1?' 等 '+added+' 条':'')); } }
+      renderAll();
+      return (msg&&msg.content)||'…';
+    }
+    msgs.push(msg);
+    for(const c2 of calls){
+      let args={}; try{ args=JSON.parse(c2.function.arguments||'{}'); }catch(e){}
+      if(c2.function.name==='save_memo'&&args.text) memo_saved.push(String(args.text).slice(0,200));
+      let out;
+      try{ out=await aiToolInfo(c2.function.name,args); }catch(e){ out='工具执行出错：'+(e&&e.message||'未知'); }
+      msgs.push({role:'tool',tool_call_id:c2.id,content:String(out)});
+    }
+    body.messages=msgs;
+  }
+  return '工具调用次数过多，请换个说法再问一次。';
+}
+/* --- AI 智能体（直连模式优先；本地桥为兼容模式；服务没启动则降级） --- */
+async function aiBridge(text){
+  const c=aiCfg();
+  // 直连模式：浏览器直接调 DeepSeek
+  if(c.mode==='direct') return await aiDirect(text);
+  // 桥模式：先试本地桥，失败降级直连（若配了 Key）
+  try{
+    // 带最近对话历史（多轮上下文，16 条 ≈ 8 轮来回），让模型记得前面聊过什么
+    const hist=(MEM.chat||[]).slice(-16).map(m=>({role:m.r==='u'?'user':'assistant',content:m.t}));
+    const r=await fetch((SET.aiUrl||'http://localhost:8787').replace(/localhost/i,'127.0.0.1')+'/v1/chat',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text, history:hist}),
+      signal:AbortSignal.timeout?AbortSignal.timeout(30000):undefined
+    });
+    if(!r.ok){ const e=await r.json().catch(()=>null); throw new Error((e&&e.error&&e.error.message)||('HTTP '+r.status)); }
+    const j=await r.json();
+    // 长久记忆：小墨主动记忆的新内容，写回本地长期记忆并持久化
+    if(Array.isArray(j.memo_saved) && j.memo_saved.length){
+      let added=0;
+      j.memo_saved.forEach(t=>{
+        if(t && !MEM.facts.some(f=>f.t===t)){ MEM.facts.push({t,ts:Date.now()}); added++; }
+      });
+      if(added){ saveAll.mem(); const first=j.memo_saved[0];
+        toast('小墨记住了：'+(first.length>24?first.slice(0,24)+'…':first)+(added>1?` 等 ${added} 条`:'')); }
+    }
+    // 操作工作台：小墨通过 act 工具下达的指令，逐一执行（新增直接做，删除先确认）
+    if(Array.isArray(j.actions)) j.actions.forEach(applyAction);
+    return j.reply||'(没有回复)';
+  }catch(e){
+    aiDown=Date.now();   // 标记桥离线
+    // 桥挂了 → 若有直连 Key 自动降级，否则给提示
+    if(c.apiKey) return await aiDirect(text);
+    return 'AI 服务连不上（本地 ai-bridge 没启动，也还没配网页直连 Key）。\n配 Key：点 AI 面板的云图标 → 选「网页直连」→ 填 Key → 保存。\n\n本地规则引擎还能用——课表/作业/记账/习惯这些直接问就行。';
+  }
+}
+/* --- 小墨操作工作台：applyAction（新增直接执行；删除 askConfirm 确认后才删） --- */
+window.applyAction=a=>{ try{
+  const D=a.data||{};
+  const need=(v,k)=>{ if(v==null||String(v).trim()===''){ toast('小墨操作缺少参数：'+k,true); return false; } return true; };
+  const txt=v=>String(v).trim();
+  const name=(v,k)=>{ const s=txt(v); if(!s||s.length>50) return ''; return s; };
+  switch(a.action){
+    case 'add_habit': { const n=name(D.name,'名称'); if(!n)return; const days=Array.isArray(D.days)&&D.days.every(x=>[0,1,2,3,4,5,6].includes(+x))?D.days.map(x=>+x):undefined; HABIT.push({id:'h'+Date.now(),name:n,color:HCOLORS.includes(D.color)?D.color:HCOLOR,created:Date.now(),logs:[],days}); saveAll.habit(); renderHabit(); renderUse(); renderTodayBox(); toast('小墨已添加习惯：'+n); break; }
+    case 'add_ddl': { const t=name(D.title,'标题'); if(!t)return; DDL.unshift({id:'d'+Date.now(),title:t,course:D.course?String(D.course).slice(0,30):'',due:/^\d{4}-\d{2}-\d{2}$/.test(txt(D.due))?txt(D.due):'',done:false}); saveAll.ddl(); renderDdl(); toast('小墨已添加作业：'+t); break; }
+    case 'add_later': { const t=name(D.title,'内容'); if(!t)return; LATER.unshift({id:'l'+Date.now(),title:t,mins:Math.max(1,parseInt(D.mins,10)||25),done:false,ts:Date.now()}); saveAll.later(); renderLater(); toast('小墨已加入稍后处理：'+t); break; }
+    case 'add_note': { const t=txt(D.text).slice(0,500); if(!t)return toast('小墨操作缺少参数：内容',true); NOTE.unshift({id:'n'+Date.now(),text:t,img:'',ts:Date.now()}); saveAll.note(); renderNote(); toast('小墨已记录笔记'); break; }
+    case 'add_express': { if(!need(D.company,'快递公司')||!need(D.code,'取件码'))return; EXPR.unshift({id:'e'+Date.now(),company:txt(D.company).slice(0,30),code:txt(D.code).slice(0,20),loc:txt(D.loc||''),note:txt(D.note||''),due:/^\d{4}-\d{2}-\d{2}$/.test(txt(D.due))?txt(D.due):'',got:false,ts:Date.now()}); saveAll.expr(); renderExpr(); toast('小墨已记录快递：'+txt(D.company)); break; }
+    case 'add_wallet': { if(!need(D.amount,'金额'))return; const amt=Math.abs(Number(D.amount)); if(!(amt>0))return toast('小墨操作金额不合法',true); WALLET.unshift({id:'w'+Date.now(),type:txt(D.type)==='inc'?'inc':'exp',amount:Math.round(amt*100)/100,cat:txt(D.cat||'').slice(0,20),note:txt(D.note||'').slice(0,60),ts:Date.now()}); saveAll.wallet(); renderWallet(); renderUse(); toast('小墨已记账：'+(txt(D.type)==='inc'?'收入':'支出')+' ¥'+Math.round(amt*100)/100); break; }
+    case 'add_diary': { const t=txt(D.text).slice(0,1000); if(!t)return toast('小墨操作缺少参数：内容',true); const date=/^\d{4}-\d{2}-\d{2}$/.test(txt(D.date))?txt(D.date):todayYMD(); const mood=MOODS.some(m=>m[0]===D.mood)?txt(D.mood):''; const i=DIARY.findIndex(x=>x.date===date); const obj={date,text:t,mood,ts:Date.now()}; if(i>=0)DIARY[i]=obj;else DIARY.push(obj); saveAll.diary(); renderDiary(); toast('小墨已写入日记（'+date+'）'); break; }
+    case 'add_cls': { if(!need(D.name,'课程名')||!need(D.day,'星期')||!need(D.s,'开始')||!need(D.e,'结束'))return; const day=parseInt(D.day,10),s=txt(D.s),e=txt(D.e); const hh=/^\d{1,2}:\d{2}$/, toMin=x=>{const p=x.split(':');return +p[0]*60+ +p[1];}; if(!(day>=0&&day<=6)||!hh.test(s)||!hh.test(e)||toMin(e)<=toMin(s))return toast('小墨操作课表时间格式不对',true); CLS.push({id:'c'+Date.now(),day,name:txt(D.name).slice(0,30),s,e,room:txt(D.room||'').slice(0,30)}); saveAll.cls(); renderAll(); toast('小墨已添加课程：'+txt(D.name)); break; }
+    case 'del_habit': delBy('habit', D.name, x=>x.name, '习惯'); break;
+    case 'del_ddl': delBy('ddl', D.title, x=>x.title, '作业'); break;
+    case 'del_later': delBy('later', D.title, x=>x.title, '稍后处理'); break;
+    case 'del_note': delBy('note', D.text, x=>x.text.slice(0,50), '笔记'); break;
+    case 'del_expr': delBy('expr', D.code, x=>x.code, '快递'); break;
+    default: toast('未知操作：'+a.action,true);
+  }
+}catch(e){ console.error('applyAction',e); toast('小墨操作执行出错',true); }};
+/* 删除类：按自然键精确匹配第一条，找到后 askConfirm 用户确认才删 */
+function delBy(kind,key,keyFn,label){
+  const arr={habit:HABIT,ddl:DDL,later:LATER,note:NOTE,expr:EXPR}[kind];
+  const k=String(key||'').trim(); if(!k) return toast('小墨操作缺少参数',true);
+  const i=arr.findIndex(x=>String(keyFn(x))===k);
+  if(i<0) return toast('没找到要删除的'+label+'：'+k,true);
+  const desc=String(keyFn(arr[i]));
+  askConfirm(`小墨想删除${label}：「${desc}」，确认吗？`,()=>{ arr.splice(i,1); saveAll[kind](); renderAll(); toast('已删除'+label); }, true);
+}
+/* --- AI 联网搜索（async：查天气走 Open-Meteo，查百科走维基百科） --- */
+async function aiSearch(q){
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),9000);
+  try{
+    if(/天气/.test(q)){                                     // 天气类：Open-Meteo，零新增外链
+      try{
+        const city=q.replace(/天气/g,'').trim()||(SET.city||'这里');
+        const g=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`,{signal:ctl.signal});
+        if(!g.ok) throw 0;
+        const gj=await g.json();
+        const loc=gj.results&&gj.results[0];
+        if(!loc) return `没找到「${city}」这个地点，换个城市名试试？`;
+        const f=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,apparent_temperature,weather_code&timezone=auto&forecast_days=1`,{signal:ctl.signal});
+        if(!f.ok) throw 0;
+        const fj=await f.json();
+        const d=WMO[fj.current.weather_code]||'—';
+        return `[联网] ${loc.name}：现在 ${Math.round(fj.current.temperature_2m)}°C（体感 ${Math.round(fj.current.apparent_temperature)}°C），${d}。`;
+      }catch(e){ return '联网查天气失败（可能没网或被拦），稍后再试。'; }
+    }
+    try{
+      const w=await fetch(`https://zh.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&redirects=1&format=json&origin=*&titles=${encodeURIComponent(q)}`,{signal:ctl.signal});
+      if(!w.ok) throw 0;
+      const wj=await w.json();
+      const pages=wj.query&&wj.query.pages?Object.values(wj.query.pages):[];
+      const pg=pages[0];
+      if(!pg||pg.missing||!pg.extract) return `联网没查到「${q}」，换个说法或稍后再试。`;
+      const title=pg.title||q, ex=pg.extract.replace(/\s+/g,' ').trim();
+      return `[联网] ${title}：${ex.length>110?ex.slice(0,110)+'…':ex}`;
+    }catch(e){ return '联网没查到（维基百科连不上，国内网络通常需要代理）。稍后再试。'; }
+  }finally{ clearTimeout(to); }
+}
+window.sendMsg=()=>{
+  const el=document.getElementById('pinTx'), t=el.value.trim();
+  if(!t) return;
+  memPush('u',t); el.value=''; renderChat();
+  setTimeout(async ()=>{
+    // 只走 AI：动作直连（专注/雨声/打卡/笔记）本地执行，其余全部交给小墨（AI 智能体）
+    const r=brain(t);
+    toast('小墨在思考…');
+    aiSay(r!=null?r:await aiBridge(t)); renderAll();
+  },220);
+};
+document.getElementById('pinTx').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); }
+});
+
+/* --- 语音输入：坑2，必须特性检测 + 降级 --- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, recOn=false;
+if(!SR){
+  const b=document.getElementById('micBtn');
+  b.style.opacity=.4;
+  document.getElementById('phSub').textContent='本地规则引擎 · 此浏览器不支持语音';
+}
+window.micToggle=()=>{
+  if(!SR){
+    toast('这个浏览器不支持语音识别（iOS Safari、微信内置浏览器都不行）。用下面的输入框打字吧。',true);
+    document.getElementById('pinTx').focus(); return;
+  }
+  if(location.protocol!=='https:' && location.hostname!=='localhost' && location.protocol!=='file:'){
+    toast('语音识别要求 HTTPS 页面。请用 https 链接打开。',true); return;
+  }
+  if(recOn){ try{rec.stop()}catch(e){} return; }
+  try{
+    rec=new SR();
+    rec.lang='zh-CN';              // ★ 不设就是 en-US，中文识别率暴跌
+    rec.interimResults=true;
+    rec.continuous=false;
+    rec.onstart=()=>{ recOn=true; document.getElementById('micBtn').classList.add('rec'); toast('在听…说完停顿一下'); };
+    rec.onresult=e=>{
+      let s=''; for(let i=e.resultIndex;i<e.results.length;i++) s+=e.results[i][0].transcript;
+      document.getElementById('pinTx').value=s;
+    };
+    rec.onerror=e=>{
+      recOn=false; document.getElementById('micBtn').classList.remove('rec');
+      const map={'not-allowed':'麦克风权限被拒绝，去浏览器地址栏的锁图标里放开','no-speech':'没听到声音，再试一次','network':'识别服务连不上（Chrome 的语音识别要联网）','audio-capture':'找不到麦克风'};
+      toast(map[e.error]||('语音识别出错：'+e.error), true);
+    };
+    rec.onend=()=>{
+      recOn=false; document.getElementById('micBtn').classList.remove('rec');
+      if(document.getElementById('pinTx').value.trim()) sendMsg();
+    };
+    rec.start();                    // ★ 必须在 click 手势里调，否则静默失败
+  }catch(e){ toast('语音启动失败：'+e.message,true); }
+};
+
+/* --- 主动提醒 --- */
+let lastNudge=load('lastNudge',{});
+function proactive(){
+  const now=Date.now(), fire=(k,gap,msg)=>{
+    if(now-(lastNudge[k]||0) < gap) return false;
+    lastNudge[k]=now; save('lastNudge',lastNudge); aiSay(msg); return true;
+  };
+  // 逾期作业
+  const over=DDL.filter(d=>!d.done&&d.due<now);
+  if(over.length && fire('over',4*3600e3, `有 ${over.length} 个作业逾期了，最久的是《${over[0].title}》。要不现在开个 25 分钟专注先啃掉？`)) return;
+  // 24 小时内
+  const urgent=DDL.filter(d=>!d.done&&d.due>now&&d.due-now<=DAY);
+  if(urgent.length && fire('urg',3*3600e3, `《${urgent[0].title}》只剩 ${fmtLeft(urgent[0].due-now)} 了。`)) return;
+  // 上课前 15 分钟
+  const n=nextCls();
+  if(n && !n.live){ const ms=n.at-now;
+    if(ms>0 && ms<=15*60000 && fire('cls_'+n.c.id, 40*60000, `${Math.round(ms/60000)} 分钟后上《${n.c.name}》，在 ${n.c.room||'教室'}，该动身了。`)) return; }
+  // 下课带伞
+  const tip=classEndTip();
+  if(tip && tip.pop>=60 && fire('rain', 5*3600e3, `提醒一下：${tip.tip}`)) return;
+  // 该睡了
+  const p=sleepPlan(), nowM=new Date().getHours()*60+new Date().getMinutes();
+  const bedT=p.bedM>=18*60?p.bedM:p.bedM+1440;
+  if(nowM>=bedT && nowM<bedT+40 && fire('sleep', 10*3600e3, `到 ${p.bed} 了，明早 ${p.f?p.f.s+' 有《'+p.f.name+'》':'虽然没课'}，收摊吧。`)) return;
+  // 备份提醒
+  const total=DDL.length+NOTE.length+LATER.length+MAT.length+FOCUS.length+WALLET.length+EXPR.length+HABIT.length;
+  if(total>=30 && fire('backup', 3*DAY, `数据已经积累 ${total} 条了，建议点一下顶部的「导出 JSON 备份」，清缓存就没了。`)) return;
+}
+
+/* --- 记忆面板 --- */
+window.openMem=()=>{
+  modal(`<h3>${ico('brain',18)} 小墨的长期记忆<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div class="hint" style="margin-top:0">这些记忆存在你自己的浏览器里，导出 JSON 时会一起带走。</div>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:12px 0 7px">你让我记住的事（${MEM.facts.length}）</div>
+    ${MEM.facts.length? MEM.facts.map((f,i)=>`<div class="lt"><div class="bd"><b>${esc(f.t)}</b><span>${new Date(f.ts).toLocaleDateString('zh-CN')}</span></div>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delFact(${i})">${ico('x',14,'var(--muted)')}</button></div>`).join('')
+      : '<div class="empty">还没有。在对话里说「记住 xxx」</div>'}
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:16px 0 7px">对话历史：${MEM.chat.length} 条</div>
+    <button class="btn sm dgr block" onclick="clearChat()">清空对话历史（保留记忆）</button>`);
+};
+window.delFact=i=>{ MEM.facts.splice(i,1); saveAll.mem(); openMem(); };
+window.clearChat=()=>{ askConfirm('清空对话历史？「记住」的内容会保留。',()=>{ MEM.chat=[]; saveAll.mem(); renderChat(); closeModal(); }); };
+
+/* --- 云端大模型设置面板（自定义 / 服务端模型 双 Tab + 三快捷预设） --- */
+const LLM_PRESETS = {
+  deepseek:    { label:'Deepseek',         baseURL:'https://api.deepseek.com/v1', model:'deepseek-chat' },
+  qwen:        { label:'硅基千问(推荐)',   baseURL:'https://api.siliconflow.cn/v1', model:'Qwen/Qwen2.5-7B-Instruct' },
+  siliconflow: { label:'硅基流动(推荐)',   baseURL:'https://api.siliconflow.cn/v1', model:'Pro/Qwen/Qwen2.5-7B-Instruct' }
+};
+let llmTabMode = 'custom';   // 'custom' | 'server'
+let llmDirect = false;       // false=本地桥 | true=网页直连
+window.openLlmSettings=()=>{
+  llmDirect = aiCfg().mode === 'direct';
+  // 先开面板（不阻塞），再异步拉当前值回填"当前值"提示
+  modal(`<h3>${ico('cloud',18)} 云端大模型设置<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:2px 0 8px">接入方式</div>
+    <div class="llm-tabs" style="margin:6px 0 12px">
+      <button class="btn sm llm-tab${!llmDirect?' on':''}" data-ai="bridge" onclick="switchDirect(false)">本地桥（电脑）</button>
+      <button class="btn sm llm-tab${llmDirect?' on':''}" data-ai="direct" onclick="switchDirect(true)">网页直连（手机/分享）</button>
+    </div>
+    <div class="llm-tabs">
+      <button class="btn sm llm-tab${llmTabMode==='custom'?' on':''}" data-mode="custom" onclick="switchLlmTab('custom')">自定义</button>
+      <button class="btn sm llm-tab${llmTabMode==='server'?' on':''}" data-mode="server" onclick="switchLlmTab('server')">服务端模型</button>
+    </div>
+    <div id="llmPresets" style="display:${llmTabMode==='custom'?'flex':'none'};gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${Object.entries(LLM_PRESETS).map(([k,p])=>`<button class="btn sm ghost" onclick="llmApplyPreset('${k}')">${esc(p.label)}</button>`).join('')}
+    </div>
+    <div class="fld"><label>API Base URL</label><input id="llmUrl" placeholder="输入 API 基础URL"></div>
+    <div class="hint">当前值：<span id="llmUrlCur">加载中…</span></div>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-top:10px">
+      <div class="fld" style="flex:1"><label>模型名称（不清楚怎么填点"获取可用模型列表"）</label><input id="llmModel" placeholder="输入或选择模型名称"></div>
+      <button class="btn ghost sm" id="llmFetchBtn" onclick="llmFetchModels()" style="margin-bottom:18px;white-space:nowrap">获取可用模型列表</button>
+    </div>
+    <div class="hint">当前值：<span id="llmModelCur">加载中…</span></div>
+    <div id="llmModelsWrap" style="display:none;margin:6px 0 14px">
+      <select id="llmModelsSel" size="6" onchange="document.getElementById('llmModel').value=this.value"
+        style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--surface-1);color:var(--ink);font-size:13px"></select>
+    </div>
+    <div class="fld"><label>API Key</label><input id="llmKey" type="password" placeholder="输入 API 密钥" autocomplete="off"></div>
+    <div class="hint">当前值：<span id="llmKeyCur">加载中…</span></div>
+    <div id="llmResult" class="hint" style="margin-top:12px;min-height:18px"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn pri" onclick="llmSave()" id="llmSaveBtn">保存设置</button>
+      <button class="btn ghost" onclick="llmTest()" id="llmTestBtn">测试 API</button>
+    </div>`);
+  switchLlmTab(llmTabMode);   // 应用 disabled 状态
+  // 异步回填当前值（不阻塞 UI）
+  const cur = aiCfg();
+  const fillFromLocal = () => {
+    if (!document.getElementById('llmUrlCur')) return;
+    document.getElementById('llmUrlCur').textContent = cur.baseURL + (llmDirect ? '（网页直连）' : '（本地桥）');
+    document.getElementById('llmModelCur').textContent = cur.model;
+    document.getElementById('llmKeyCur').textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
+  };
+  if (llmDirect) { fillFromLocal(); return; }
+  fetch(aiBase()+'/v1/settings', { signal: AbortSignal.timeout(3000) })
+    .then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(c => {
+      // modal 已被关闭/重开的可能：检查节点是否还在 DOM
+      if (!document.getElementById('llmUrlCur')) return;
+      if (!c) {
+        document.getElementById('llmUrlCur').textContent = '连不上桥（确认 ai-bridge 已起）';
+        document.getElementById('llmModelCur').textContent = '连不上桥';
+        document.getElementById('llmKeyCur').textContent = '连不上桥';
+      } else {
+        document.getElementById('llmUrlCur').textContent = c.baseURL + (c.source ? `（${c.source==='custom'?'自定义配置':'服务端默认'}）` : '');
+        document.getElementById('llmModelCur').textContent = c.model;
+        document.getElementById('llmKeyCur').textContent = c.keySet ? '已配置（保存后可改）' : '未配置';
+      }
+    });
+};
+function switchDirect(d){
+  llmDirect = !!d;
+  document.querySelectorAll('.llm-tabs [data-ai]').forEach(b => b.classList.toggle('on', (b.dataset.ai==='direct') === llmDirect));
+  const cur = aiCfg();
+  const curMode = llmDirect ? cur : (cur.mode==='direct' ? cur : null);
+  const u = document.getElementById('llmUrl'), m = document.getElementById('llmModel'), k = document.getElementById('llmKey');
+  if (llmDirect) {
+    // 网页直连：用 localStorage 里的值回填输入框
+    if (u) u.value = cur.baseURL; if (m) m.value = cur.model; if (k) k.value = cur.apiKey;
+    const ur = document.getElementById('llmUrlCur'), mr = document.getElementById('llmModelCur'), kr = document.getElementById('llmKeyCur');
+    if (ur) ur.textContent = cur.baseURL + '（网页直连）';
+    if (mr) mr.textContent = cur.model;
+    if (kr) kr.textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
+  }
+}
+function switchLlmTab(mode){
+  llmTabMode = mode;
+  document.querySelectorAll('.llm-tab[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  document.getElementById('llmPresets').style.display = mode === 'custom' ? 'flex' : 'none';
+  const isCustom = mode === 'custom';
+  ['llmUrl','llmModel','llmKey'].forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = !isCustom; el.style.opacity = isCustom ? '1' : '0.55'; }});
+  const fb = document.getElementById('llmFetchBtn'); if (fb) { fb.disabled = !isCustom; fb.style.opacity = isCustom ? '1' : '0.55'; }
+}
+function llmApplyPreset(k){
+  const p = LLM_PRESETS[k]; if (!p) return;
+  document.getElementById('llmUrl').value = p.baseURL;
+  document.getElementById('llmModel').value = p.model;
+  toast('已填入预设：'+p.label+'（Key 还需你填）');
+}
+window.llmFetchModels=async ()=>{
+  const btn = document.getElementById('llmFetchBtn'); if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = '拉取中…';
+  try {
+    const url = document.getElementById('llmUrl').value.trim().replace(/\/+$/, '');
+    const apiKey = document.getElementById('llmKey').value.trim();
+    if (llmDirect) {
+      // 网页直连：浏览器直接拉 DeepSeek /models
+      if (!apiKey) throw new Error('请先填 API Key');
+      const r = await fetch(url + '/models', { headers: { 'Authorization': 'Bearer ' + apiKey }, signal: AbortSignal.timeout(10000) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      const ids = (j.data || []).map(x => x && x.id).filter(Boolean);
+      const sel = document.getElementById('llmModelsSel');
+      sel.innerHTML = ids.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+      const wrap = document.getElementById('llmModelsWrap');
+      wrap.style.display = ids.length ? 'block' : 'none';
+      toast(ids.length ? '已加载 ' + ids.length + ' 个模型，下拉选一个' : '该 API 没返回模型列表（检查 baseURL 和 Key）', !ids.length);
+      return;
+    }
+    // 本地桥模式
+    const qs = new URLSearchParams();
+    if (url) qs.set('baseURL', url);
+    if (apiKey) qs.set('apiKey', apiKey);
+    const r = await fetch(aiBase() + '/v1/settings/models?' + qs.toString(), { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error((e.error && e.error.message) || ('HTTP '+r.status)); }
+    const j = await r.json();
+    const sel = document.getElementById('llmModelsSel');
+    sel.innerHTML = (j.models || []).map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+    const wrap = document.getElementById('llmModelsWrap');
+    wrap.style.display = j.models && j.models.length ? 'block' : 'none';
+    if (!j.models || !j.models.length) toast('该 API 没返回模型列表（检查 baseURL 和 Key）', true);
+    else toast('已加载 ' + j.models.length + ' 个模型，下拉选一个');
+  } catch (e) {
+    toast('拉取失败：' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '获取可用模型列表';
+  }
+};
+window.llmSave=async ()=>{
+  const mode = llmTabMode;
+  const baseURL = document.getElementById('llmUrl').value.trim();
+  const model = document.getElementById('llmModel').value.trim();
+  const apiKey = document.getElementById('llmKey').value.trim();
+  if (mode === 'custom' && (!baseURL || !model || !apiKey)) {
+    return toast('自定义模式下，URL / 模型名 / Key 都要填', true);
+  }
+  const btn = document.getElementById('llmSaveBtn'); btn.disabled = true; btn.textContent = '保存中…';
+  try {
+    if (llmDirect) {
+      // 网页直连：写 localStorage（模式=direct），立即生效
+      aiSaveCfg({ mode:'direct', baseURL, model, apiKey, searchKey: aiCfg().searchKey });
+      const cur = aiCfg();
+      document.getElementById('llmResult').innerHTML =
+        `<span style="color:var(--ok)">✓ 已保存（网页直连） → ${esc(cur.baseURL)} · ${esc(cur.model)} · keySet=${cur.apiKey?'是':'否'}</span> · 对话立即生效`;
+      document.getElementById('llmUrlCur').textContent = cur.baseURL + '（网页直连）';
+      document.getElementById('llmModelCur').textContent = cur.model;
+      document.getElementById('llmKeyCur').textContent = cur.apiKey ? '已配置（保存后可改）' : '未配置';
+      toast('网页直连配置已保存');
+      return;
+    }
+    // 本地桥模式
+    const r = await fetch(aiBase() + '/v1/settings/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, baseURL, model, apiKey }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error((e.error && e.error.message) || ('HTTP '+r.status)); }
+    const j = await r.json();
+    document.getElementById('llmResult').innerHTML =
+      `<span style="color:var(--ok)">✓ 已保存 → ${esc(j.mode==='custom'?'自定义':'服务端')} · ${esc(j.baseURL)} · ${esc(j.model)} · keySet=${j.keySet?'是':'否'}</span> · 下次对话即生效`;
+    document.getElementById('llmUrlCur').textContent = j.baseURL;
+    document.getElementById('llmModelCur').textContent = j.model;
+    document.getElementById('llmKeyCur').textContent = j.keySet ? '已配置（保存后可改）' : '未配置';
+    toast('设置已保存，热加载已生效');
+  } catch (e) {
+    toast('保存失败：' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '保存设置';
+  }
+};
+window.llmTest=async ()=>{
+  const btn = document.getElementById('llmTestBtn'); btn.disabled = true; btn.textContent = '测试中…';
+  document.getElementById('llmResult').innerHTML = '<span style="color:var(--sub)">正在测两件：拉模型列表 + 发一条短对话…</span>';
+  try {
+    const baseURL = document.getElementById('llmUrl').value.trim().replace(/\/+$/, '');
+    const model = document.getElementById('llmModel').value.trim();
+    const apiKey = document.getElementById('llmKey').value.trim();
+    if (llmDirect) {
+      // 网页直连：浏览器直接双探针
+      if (!apiKey) throw new Error('请先填 API Key');
+      const res = { baseURL, model, models_ok:false, models_count:0, chat_ok:false, errors:{} };
+      try {
+        const r1 = await fetch(baseURL + '/models', { headers: { 'Authorization': 'Bearer ' + apiKey }, signal: AbortSignal.timeout(8000) });
+        if (r1.ok) {
+          const j1 = await r1.json();
+          res.models = (j1.data || []).map(x => x && x.id).filter(Boolean).slice(0, 50);
+          res.models_count = res.models.length; res.models_ok = true;
+        } else res.errors.models = 'HTTP ' + r1.status;
+      } catch (e) { res.errors.models = e && e.message || '网络错误'; }
+      try {
+        const r2 = await fetch(baseURL + '/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: '好' }], max_tokens: 5, temperature: 0 }),
+          signal: AbortSignal.timeout(10000)
+        });
+        if (r2.ok) {
+          const j2 = await r2.json();
+          res.chat_reply = j2 && j2.choices && j2.choices[0] && j2.choices[0].message && j2.choices[0].message.content;
+          res.chat_ok = true;
+        } else {
+          const t = await r2.text().catch(() => '');
+          res.errors.chat = 'HTTP ' + r2.status + '：' + t.slice(0, 150);
+        }
+      } catch (e) { res.errors.chat = e && e.message || '网络错误'; }
+      // 智能诊断：把 Failed to fetch 翻译成有用提示（CSP/预览沙箱/网络层拦截）
+      const diag = (m) => {
+        if (/Failed to fetch|NetworkError|TypeError/.test(String(m||''))) {
+          const loc = location && location.protocol;
+          if (loc === 'file:') return m + '（双击打开已放行跨域，若仍失败可能是浏览器插件/代理拦截）';
+          if (loc === 'http:' && location.hostname === '127.0.0.1') return m + '（检测到你在预览沙箱里测试：这个环境禁止直连 api.deepseek.com。请用浏览器打开公网链接 https://e97396ce128342ec84582201ab0f0939.sh5.agentos-app.net 测试，或双击本地 workbench.html）';
+          return m + '（浏览器拦截了跨域请求：请确认你在「公网链接」或「双击本地文件」打开，而不是预览沙箱）';
+        }
+        return m;
+      };
+      if (res.errors.models) res.errors.models = diag(res.errors.models);
+      if (res.errors.chat) res.errors.chat = diag(res.errors.chat);
+      const ok = res.models_ok && res.chat_ok;
+      const colors = res.errors && (res.errors.models || res.errors.chat) ? 'var(--danger)' : 'var(--ok)';
+      const lines = [];
+      lines.push(`<span style="color:${colors}">${ok?'✓ 双探针全通':'✗ 有失败'}</span>`);
+      lines.push(`模型列表：${res.models_ok?'✓ 拉到 '+res.models_count+' 个':(res.errors.models?'✗ '+res.errors.models:'✗ 未拉取')}${res.models && res.models.length ? '（示例：'+esc(res.models.slice(0,3).join(', '))+'）' : ''}`);
+      lines.push(`短对话：${res.chat_ok?'✓ 通了（回复：'+esc(res.chat_reply||'(空)')+'）':(res.errors.chat?'✗ '+res.errors.chat:'✗ 失败')}`);
+      document.getElementById('llmResult').innerHTML = lines.join('<br>');
+      toast(ok ? '双探针都通了，可以保存' : '有探针失败，看上面详情', !ok);
+      return;
+    }
+    // 本地桥模式
+    const r = await fetch(aiBase() + '/v1/settings/test', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseURL, model, apiKey }),
+      signal: AbortSignal.timeout(20000)
+    });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error((e.error && e.error.message) || ('HTTP '+r.status)); }
+    const j = await r.json();
+    const ok = j.all_ok;
+    const colors = j.errors && (j.errors.models || j.errors.chat) ? 'var(--danger)' : 'var(--ok)';
+    const lines = [];
+    lines.push(`<span style="color:${colors}">${ok?'✓ 双探针全通':'✗ 有失败'}</span>`);
+    lines.push(`模型列表：${j.models_ok?'✓ 拉到 '+j.models_count+' 个':(j.errors && j.errors.models) ? '✗ ' + j.errors.models : '✗ 未拉取'}${j.models && j.models.length ? '（示例：'+esc(j.models.slice(0,3).join(', '))+'）' : ''}`);
+    lines.push(`短对话：${j.chat_ok?'✓ 通了（回复：'+esc(j.chat_reply||'(空)')+'）':(j.errors && j.errors.chat) ? '✗ ' + j.errors.chat : '✗ 失败'}`);
+    document.getElementById('llmResult').innerHTML = lines.join('<br>');
+    toast(ok ? '双探针都通了，可以保存' : '有探针失败，看上面详情', !ok);
+  } catch (e) {
+    document.getElementById('llmResult').innerHTML = '<span style="color:var(--danger)">✗ 测试失败：' + esc(e.message) + '</span>';
+    toast('测试失败：' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '测试 API';
+  }
+};
+/* 取 ai-bridge 地址（与 aiBridge 同步） */
+function aiBase(){ return (SET.aiUrl||'http://localhost:8787').replace(/localhost/i,'127.0.0.1'); }
+
+/* =========================================================
+   18. 弹层 / 设置 / 增删
+   ========================================================= */
+function modal(html){
+  document.getElementById('modalHost').innerHTML=
+    `<div class="mask" onclick="if(event.target===this)closeModal()"><div class="sheet">${html}</div></div>`;
+}
+window.closeModal=()=>{ document.getElementById('modalHost').innerHTML=''; };
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); if(!panel.classList.contains('hide')) togglePanelAI(false); } });
+
+// 通用确认弹层（替代原生 confirm —— 原生 confirm 在沙箱 iframe/部分 webview 会被静默忽略导致"点了没反应"）
+window.askConfirm=(text,onYes,danger)=>{
+  modal(`<div style="max-width:340px">
+    <h3>${ico('bell',19,'#F59E0B')} 请确认<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <p style="white-space:pre-line;color:var(--sub);font-size:14.5px;line-height:1.7;margin:4px 0 16px">${esc(text)}</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="askCancel()">取消</button>
+      <button class="btn" style="${danger?'background:#EF4444;border-color:#EF4444;color:#fff;':''}" onclick="askYes()">确定</button>
+    </div>
+  </div>`);
+  window._askCb=onYes;
+};
+window.askYes=()=>{ closeModal(); const cb=window._askCb; window._askCb=null; if(cb) cb(); };
+window.askCancel=()=>{ closeModal(); window._askCb=null; };
+
+window.openDdl=()=>{
+  const d=new Date(Date.now()+3*DAY);
+  modal(`<h3>${ico('clock',18)} 添加作业<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div class="fld"><label>作业内容</label><input id="ndT" placeholder="比如：第4章课后习题 1-8"></div>
+    <div class="fld"><label>课程</label><input id="ndC" list="courses" placeholder="建筑施工技术">
+      <datalist id="courses">${[...new Set(CLS.map(c=>c.name).concat(MAT.map(m=>m.course)))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
+    <div class="row"><div class="fld" style="flex:2"><label>截止日期</label><input id="ndD" type="date" value="${ymd(d)}"></div>
+      <div class="fld" style="flex:1"><label>时间</label><input id="ndH" type="time" value="23:59"></div></div>
+    <button class="btn pri block" onclick="saveDdl()">添加</button>`);
+};
+window.saveDdl=()=>{
+  const t=document.getElementById('ndT').value.trim();
+  if(!t) return toast('作业内容不能为空');
+  const dv=document.getElementById('ndD').value, hv=document.getElementById('ndH').value||'23:59';
+  if(!dv) return toast('选一下截止日期');
+  const due=new Date(dv+'T'+hv+':00').getTime();
+  if(isNaN(due)) return toast('日期格式不对',true);
+  DDL.push({id:'d'+Date.now(),title:t,course:document.getElementById('ndC').value.trim()||'未分类',due,done:false});
+  saveAll.ddl(); closeModal(); renderAll(); toast('已添加');
+};
+window.openMat=()=>{
+  modal(`<h3>${ico('book',18)} 添加课程资料<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div class="fld"><label>课程名（同名会自动聚合到一组）</label><input id="nmC" list="courses2" placeholder="建筑施工技术">
+      <datalist id="courses2">${[...new Set(CLS.map(c=>c.name).concat(MAT.map(m=>m.course)))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
+    <div class="fld"><label>类型</label><select id="nmT"><option>PPT</option><option>录播</option><option>PDF</option><option>其他</option></select></div>
+    <div class="fld"><label>标题</label><input id="nmN" placeholder="第3章 土方工程.pptx"></div>
+    <div class="fld"><label>在哪儿（路径 / 链接 / 平台位置）</label><input id="nmL" placeholder="学习通 › 课程资料　或　https://…"></div>
+    <button class="btn pri block" onclick="saveMat()">添加</button>`);
+};
+window.saveMat=()=>{
+  const c=document.getElementById('nmC').value.trim(), n=document.getElementById('nmN').value.trim();
+  if(!c||!n) return toast('课程名和标题都要填');
+  MAT.push({id:'m'+Date.now(),course:c,type:document.getElementById('nmT').value,title:n,loc:document.getElementById('nmL').value.trim()});
+  saveAll.mat(); closeModal(); renderMat(); renderUse(); toast('已添加');
+};
+
+window.openSettings=()=>{
+  modal(`<h3>${ico('gear',18)} 设置<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px">学期</div>
+    <div class="row"><div class="fld" style="flex:2"><label>开学第一周的周一</label><input id="sTs" type="date" value="${esc(SET.termStart)}"></div>
+      <div class="fld" style="flex:1"><label>总周数</label><input id="sTw" type="number" min="1" max="30" value="${SET.totalWeeks}"></div></div>
+    <div class="fld"><label>考试周（逗号分隔，如 17,18）</label><input id="sEw" value="${esc(SET.examWeeks)}"></div>
+
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">天气位置</div>
+    <div class="row"><div class="fld"><label>地点名</label><input id="sCity" value="${esc(SET.city)}"></div>
+      <div class="fld"><label>纬度</label><input id="sLat" type="number" step="0.01" value="${SET.lat}"></div>
+      <div class="fld"><label>经度</label><input id="sLon" type="number" step="0.01" value="${SET.lon}"></div></div>
+    <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--sub);cursor:pointer;padding:8px 0">
+      <input type="checkbox" id="sAutoLoc" style="width:18px;height:18px;accent-color:var(--brand)" ${SET.autoLoc!==false?'checked':''}>
+      打开工作台时自动定位（推荐）
+    </label>
+    <button class="btn sm block ghost" style="margin-top:4px" onclick="locateMe()">立即定位我的位置</button>
+
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">生活费</div>
+    <div class="fld"><label>每月生活费预算 ¥</label><input id="sBud" type="number" min="0" step="50" value="${SET.bud||0}"></div>
+
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">作息</div>
+    <div class="row"><div class="fld"><label>想睡几小时</label><input id="sSh" type="number" step="0.5" min="4" max="12" value="${SET.sleepH}"></div>
+      <div class="fld"><label>起床准备(分)</label><input id="sPm" type="number" min="0" max="180" value="${SET.prepMin}"></div>
+      <div class="fld"><label>路上(分)</label><input id="sCm" type="number" min="0" max="180" value="${SET.commuteMin}"></div></div>
+
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">云端同步（可选）</div>
+    <div class="hint">登录后课表/作业/记账/日记等自动备份云端，换设备登录同一账号即可恢复。不登录=纯本地。</div>
+    <div class="fld"><label>Supabase Project URL</label><input id="clUrl" value="${esc(cloudCfg().url||'')}" placeholder="https://xxxx.supabase.co"></div>
+    <div class="fld"><label>Supabase 可发布密钥（sb_publishable_xxx）</label><input id="clAnonKey" value="${esc(cloudCfg().anonKey||'')}" placeholder="sb_publishable_..."></div>
+    <div id="cloudTip" style="font-size:12.5px;color:var(--sub);margin:8px 0;line-height:1.6"></div>
+    <div class="row">
+      <div class="fld" style="flex:1"><label>邮箱（登录账号）</label><input id="clUser" placeholder="name@example.com" autocomplete="off"></div>
+      <div class="fld" style="flex:1"><label>密码</label><input id="clPass" type="password" placeholder="至少 6 位" autocomplete="off"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm ghost" onclick="cloudSaveCfg()">保存配置</button>
+      <button class="btn sm pri" onclick="cloudLogin()" id="clLoginBtn">登录</button>
+      <button class="btn sm ghost" onclick="cloudRegister()" id="clRegBtn">注册新账号</button>
+      <button class="btn sm ghost" onclick="cloudPull(true)" id="clPullBtn">立即同步</button>
+      <button class="btn sm ghost" onclick="cloudLogout()" id="clOutBtn">退出登录</button>
+    </div>
+    <div class="hint">配置方法：supabase.com 免费注册 → 建项目 → SQL Editor 跑建表语句（见「云端同步配置指南.md」）→ 回填 URL 和密钥 → 注册登录。</div>
+
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">课表（${CLS.length} 节）</div>
+    <button class="btn sm block ghost" onclick="openCls()">编辑课表</button>
+    <div class="hint">课表按「星期几 + 时段」重复，不区分单双周。需要单双周的话告诉我，下个版本加。</div>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">AI 对话</div>
+    <div class="hint">小墨的模型 / API Key / 接入方式，点 AI 悬浮球 → 云图标 ☁ 里配置。这里不重复放了。</div>
+    <button class="btn pri block" style="margin-top:8px" onclick="saveSettings()">保存设置</button>`);
+  renderCloudStatus();
+};
+window.setAiModeCfg=(m)=>{
+  const cur=load('ai',{});
+  cur.mode = m==='direct'?'direct':'bridge';
+  save('ai',cur);
+  document.querySelectorAll('.llm-tabs [data-aimode]').forEach(b=>b.classList.toggle('on', b.dataset.aimode===(m==='direct'?'direct':'bridge')));
+  toast(m==='direct'?'已切换：网页直连（填 Key 后手机/朋友也能用）':'已切换：本地桥（电脑专用）');
+};
+window.cloudSaveCfg=()=>{
+  const url=document.getElementById('clUrl').value.trim();
+  const anonKey=document.getElementById('clAnonKey').value.trim();
+  if(!url||!anonKey) return toast('Project URL 和 anon key 都要填（Supabase 控制台 Settings → API 里复制）',true);
+  const c=cloudCfg();
+  cloudSave({url, anonKey});
+  toast('云端配置已保存'+(c.token?'（已登录）':'，填邮箱密码登录'));
+  renderCloudStatus();
+};
+window.saveSettings=()=>{
+  const ts=document.getElementById('sTs').value;
+  if(!ts) return toast('开学日期不能空');
+  Object.assign(SET,{
+    termStart:ts, totalWeeks:Math.max(1,Math.min(30,+document.getElementById('sTw').value||20)),
+    examWeeks:document.getElementById('sEw').value.trim(),
+    city:document.getElementById('sCity').value.trim()||'我的位置',
+    lat:parseFloat(document.getElementById('sLat').value)||30.99,
+    lon:parseFloat(document.getElementById('sLon').value)||104.68,
+    sleepH:Math.max(4,Math.min(12,parseFloat(document.getElementById('sSh').value)||7.5)),
+    prepMin:Math.max(0,Math.min(180,+document.getElementById('sPm').value||40)),
+    commuteMin:Math.max(0,Math.min(180,+document.getElementById('sCm').value||15)),
+    bud:Math.max(0,+document.getElementById('sBud').value||0),
+    autoLoc:document.getElementById('sAutoLoc').checked
+  });
+  saveAll.set(); closeModal(); renderAll(); fetchWx(); toast('设置已保存');
+};
+window.openCls=()=>{
+  const rows=CLS.slice().sort((a,b)=>a.day-b.day||toMin(a.s)-toMin(b.s)).map(c=>`
+    <div class="lt"><div class="bd"><b>${DAYNAME[c.day]} ${c.s}–${c.e} ${esc(c.name)}</b><span>${esc(c.room||'')}</span></div>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delCls('${c.id}')">${ico('x',14,'var(--muted)')}</button></div>`).join('');
+  modal(`<h3>${ico('cal',18)} 课表<button class="iconbtn" onclick="closeModal()">${ico('x',18)}</button></h3>
+    <div style="max-height:36vh;overflow:auto;margin-bottom:14px">${rows||'<div class="empty">还没有课</div>'}</div>
+    <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px">加一节课</div>
+    <div class="row"><div class="fld" style="flex:1"><label>星期</label><select id="ncD">${DAYNAME.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div>
+      <div class="fld" style="flex:1"><label>开始</label><input id="ncS" type="time" value="08:00"></div>
+      <div class="fld" style="flex:1"><label>结束</label><input id="ncE" type="time" value="09:40"></div></div>
+    <div class="row"><div class="fld" style="flex:2"><label>课程名</label><input id="ncN" placeholder="建筑施工技术"></div>
+      <div class="fld" style="flex:1"><label>教室</label><input id="ncR" placeholder="3教201"></div></div>
+    <button class="btn pri block" onclick="addCls()">添加</button>
+    <button class="btn ghost block" style="margin-top:8px" onclick="openSettings()">返回设置</button>`);
+};
+window.addCls=()=>{
+  const n=document.getElementById('ncN').value.trim();
+  if(!n) return toast('课程名不能空');
+  const s=document.getElementById('ncS').value, e=document.getElementById('ncE').value;
+  if(!s||!e||toMin(e)<=toMin(s)) return toast('结束时间要晚于开始时间',true);
+  CLS.push({id:'c'+Date.now(),day:+document.getElementById('ncD').value,s,e,name:n,room:document.getElementById('ncR').value.trim()});
+  saveAll.cls(); openCls(); renderAll(); toast('已添加');
+};
+window.delCls=id=>{ CLS=CLS.filter(c=>c.id!==id); saveAll.cls(); openCls(); renderAll(); };
+
+/* =========================================================
+   19. 导入导出（铁律2：首屏、不限条数、清空二次确认）
+   ========================================================= */
+window.exportJSON=()=>{
+  const data={ _app:'我的工作台', _ver:1, _at:new Date().toISOString(),
+    set:SET, cls:CLS, ddl:DDL, mat:MAT, note:NOTE, later:LATER, focus:FOCUS, mem:MEM, wallet:WALLET, expr:EXPR, habit:HABIT, diary:DIARY };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`工作台备份_${ymd(new Date())}.json`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  toast('备份已下载，收好');
+};
+window.importJSON=(inp)=>{
+  const f=inp.files&&inp.files[0]; inp.value='';
+  if(!f) return;
+  const r=new FileReader();
+  r.onerror=()=>toast('文件读取失败',true);
+  r.onload=e=>{
+    let d;
+    try{ d=JSON.parse(e.target.result); }catch(err){ return toast('不是有效的 JSON 备份文件',true); }
+    if(!d || typeof d!=='object' || (!d.ddl && !d.cls && !d.note)) return toast('这个文件不像是工作台的备份',true);
+    const cnt=(d.ddl||[]).length+(d.note||[]).length+(d.later||[]).length+(d.mat||[]).length+(d.wallet||[]).length+(d.expr||[]).length+(d.habit||[]).length+(d.diary||[]).length;
+    askConfirm(`将导入 ${cnt} 条数据，并覆盖当前全部内容。确定吗？\n（建议先导出一次现有数据）`,()=>{
+    if(Array.isArray(d.cls))  { CLS=d.cls;   saveAll.cls(); }
+    if(Array.isArray(d.ddl))  { DDL=d.ddl;   saveAll.ddl(); }
+    if(Array.isArray(d.mat))  { MAT=d.mat;   saveAll.mat(); }
+    if(Array.isArray(d.note)) { NOTE=d.note; saveAll.note(); }
+    if(Array.isArray(d.later)){ LATER=d.later;saveAll.later(); }
+    if(Array.isArray(d.focus)){ FOCUS=d.focus;saveAll.focus(); }
+    if(Array.isArray(d.wallet)){ WALLET=d.wallet; saveAll.wallet(); }
+    if(Array.isArray(d.expr)){ EXPR=d.expr; saveAll.expr(); }
+    if(Array.isArray(d.habit)){ HABIT=d.habit; saveAll.habit(); }
+    if(Array.isArray(d.diary)){ DIARY=d.diary; saveAll.diary(); }
+    if(d.mem && typeof d.mem==='object'){ MEM=Object.assign({facts:[],chat:[]},d.mem); saveAll.mem(); }
+    if(d.set && typeof d.set==='object'){ SET=Object.assign({},DEF_SET,d.set); saveAll.set(); }
+    renderAll(); toast(`导入成功，共 ${cnt} 条`);
+    },true);
+  };
+  r.readAsText(f);
+};
+window.clearSeed=()=>{
+  const n=DDL.filter(d=>d.seed).length+MAT.filter(m=>m.seed).length+LATER.filter(l=>l.seed).length+NOTE.filter(x=>x.seed).length+WALLET.filter(w=>w.seed).length+EXPR.filter(e=>e.seed).length+HABIT.filter(h=>h.seed).length;
+  if(!n) return toast('已经没有示例数据了');
+  askConfirm(`清掉 ${n} 条示例数据？你自己加的内容不受影响。`,()=>{
+  DDL=DDL.filter(d=>!d.seed); MAT=MAT.filter(m=>!m.seed);
+  LATER=LATER.filter(l=>!l.seed); NOTE=NOTE.filter(x=>!x.seed);
+  WALLET=WALLET.filter(w=>!w.seed); EXPR=EXPR.filter(e=>!e.seed); HABIT=HABIT.filter(h=>!h.seed);
+  saveAll.ddl(); saveAll.mat(); saveAll.later(); saveAll.note(); saveAll.wallet(); saveAll.expr(); saveAll.habit();
+  renderAll(); toast('示例数据已清空');
+  });
+};
+window.wipeAll=()=>{
+  askConfirm('⚠ 这会删掉工作台里的全部数据（课表、作业、笔记、专注记录、AI 记忆）。\n\n删了找不回来。确定吗？',()=>{
+    askConfirm('最后确认一次：真的要清空全部吗？\n\n强烈建议先点「导出 JSON 备份」。',()=>{
+      Object.keys(localStorage).filter(k=>k.startsWith(K)).forEach(k=>localStorage.removeItem(k));
+      location.reload();
+    },true);
+  },true);
+};
+function renderUse(){
+  const mb=usageMB();
+  const total=DDL.length+NOTE.length+LATER.length+MAT.length+FOCUS.length+WALLET.length+EXPR.length+HABIT.length;
+  document.getElementById('useTip').textContent=`${total} 条 · 占用 ${mb.toFixed(2)}MB / 约 5MB`;
+  const nd=document.getElementById('nudge');
+  if(total>=30 || mb>3.5){
+    nd.classList.remove('hide');
+    nd.innerHTML=`${ico('bell',15)} ${mb>3.5?`存储已用 ${mb.toFixed(1)}MB，接近浏览器上限，`:`数据已积累 ${total} 条，`}建议现在导出一次备份。`;
+  } else nd.classList.add('hide');
+}
+
+/* =========================================================
+   21. 生活辅助（V2）：生活费记账 + 快递取件码
+   ========================================================= */
+window.walType=t=>{
+  WTYPE=t;
+  document.getElementById('wSegExp').className='btn sm '+(t==='exp'?'pri':'ghost');
+  document.getElementById('wSegInc').className='btn sm '+(t==='inc'?'pri':'ghost');
+};
+function renderWallet(){
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const mon=WALLET.filter(w=>{ const d=new Date(w.ts); return d.getFullYear()===y && d.getMonth()===m; });
+  const inc=mon.filter(w=>w.type==='inc').reduce((s,w)=>s+w.amount,0);
+  const exp=mon.filter(w=>w.type==='exp').reduce((s,w)=>s+w.amount,0);
+  const bud=+SET.bud||0;
+  const left=bud>0 ? bud-exp+inc : inc-exp;
+  document.getElementById('walLeft').textContent='¥'+left.toFixed(0);
+  document.getElementById('walBud').textContent='月预算 ¥'+(bud||0);
+  document.getElementById('walSub').textContent=`已花 ¥${exp.toFixed(0)} / 预算 ¥${bud||0}${inc?` · 收入 ¥${inc.toFixed(0)}`:''}`;
+  const pct = bud>0 ? Math.min(100, exp/bud*100) : 0;
+  document.getElementById('walPct').textContent = bud>0 ? Math.round(pct)+'%' : '未设';
+  const arc=document.getElementById('walArc');
+  arc.setAttribute('stroke-dashoffset', String(238.8*(1-pct/100)));
+  arc.setAttribute('stroke', pct>=100?'#EF4444' : pct>=80?'#F59E0B' : 'var(--brand)');
+  const list=WALLET.slice().sort((a,b)=>b.ts-a.ts).slice(0,12);
+  document.getElementById('walList').innerHTML = list.length ? list.map(w=>`
+    <div class="wl">
+      <div class="bd"><b><span class="cat ${esc(w.cat)}">${esc(w.cat)}</span>${esc(w.note||(w.type==='inc'?'收入':'支出'))}</b>
+        <span>${new Date(w.ts).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
+      <div class="amt ${w.type==='inc'?'inc':'exp'}">${w.type==='inc'?'+':'−'}¥${w.amount.toFixed(2)}</div>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delWallet('${w.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+    </div>`).join('') : `<div class="empty">这个月还没记账</div>`;
+}
+window.addWallet=()=>{
+  const amt=parseFloat(document.getElementById('wAmt').value);
+  if(!(amt>0)) return toast('金额得大于 0',true);
+  WALLET.unshift({id:'w'+Date.now(),type:WTYPE,amount:Math.round(amt*100)/100,
+    cat:document.getElementById('wCat').value,note:document.getElementById('wNote').value.trim(),ts:Date.now()});
+  if(!saveAll.wallet()){ WALLET.shift(); return; }
+  document.getElementById('wAmt').value=''; document.getElementById('wNote').value='';
+  renderWallet(); renderUse(); renderTodayBox();
+  toast(WTYPE==='inc'?'收入已记':'支出已记');
+};
+window.delWallet=id=>{ askConfirm('删除这条记账？',()=>{ WALLET=WALLET.filter(x=>x.id!==id); saveAll.wallet(); renderWallet(); renderUse(); }); };
+
+/* --- 语音记账：复用 SpeechRecognition，特性检测 + 降级（坑2） --- */
+function parseSpend(text){
+  let type='exp';
+  if(/收入|工资|收到|赚|零花钱|进账|发了|补助/.test(text)) type='inc';
+  const m=text.match(/(\d+(?:\.\d+)?)/);
+  const amt=m?parseFloat(m[1]):null;
+  let cat='其他';
+  if(/吃|饭|餐|食堂|外卖|早饭|午饭|晚饭|零食|奶茶|咖啡|水果|喝/.test(text)) cat='餐饮';
+  else if(/地铁|公交|打车|滴滴|高铁|火车|车票|加油|停车|交通费|出租|骑行/.test(text)) cat='交通';
+  else if(/买|购|淘宝|京东|拼多多|衣服|鞋|数码|日用品|超市|护肤/.test(text)) cat='购物';
+  else if(/玩|游戏|电影|会员|娱乐|演出|票/.test(text)) cat='娱乐';
+  else if(/书|课|资料|打印|学费|考试|报名|培训/.test(text)) cat='学习';
+  return {type,amt,cat,text};
+}
+window.walletMic=()=>{
+  if(!SR){ toast('这个浏览器不支持语音识别（iOS Safari、微信内置浏览器都不行）。手动填金额吧。',true); document.getElementById('wAmt').focus(); return; }
+  if(location.protocol!=='https:' && location.hostname!=='localhost' && location.protocol!=='file:'){ toast('语音识别要求 HTTPS 页面。请用 https 链接打开。',true); return; }
+  try{
+    const r=new SR(); r.lang='zh-CN'; r.interimResults=true; r.continuous=false;
+    r.onstart=()=>{ document.getElementById('wMic').classList.add('rec'); toast('在听…说完停顿一下'); };
+    r.onresult=e=>{ let s=''; for(let i=e.resultIndex;i<e.results.length;i++) s+=e.results[i][0].transcript; document.getElementById('wNote').value=s; };
+    r.onerror=e=>{ document.getElementById('wMic').classList.remove('rec');
+      const map={'not-allowed':'麦克风权限被拒绝，去地址栏锁图标放开','no-speech':'没听到声音，再试一次','network':'识别服务连不上（Chrome 语音要联网）','audio-capture':'找不到麦克风'};
+      toast(map[e.error]||('语音识别出错：'+e.error),true); };
+    r.onend=()=>{ document.getElementById('wMic').classList.remove('rec');
+      const tx=document.getElementById('wNote').value.trim(); if(tx) fillFromSpeech(tx); };
+    r.start();
+  }catch(e){ toast('语音启动失败：'+e.message,true); }
+};
+function fillFromSpeech(tx){
+  const p=parseSpend(tx);
+  if(p.type) walType(p.type);
+  const sel=document.getElementById('wCat');
+  if([...sel.options].some(o=>o.value===p.cat)) sel.value=p.cat;
+  if(p.amt){ document.getElementById('wAmt').value=p.amt; toast('听好了：'+tx+' —— 核对金额再保存'); }
+  else toast('没听清金额，手动填一下 ¥',true);
+}
+
+/* --- 快递取件码 --- */
+function renderExpr(){
+  const open=EXPR.filter(e=>!e.got).sort((a,b)=>(a.due||1e15)-(b.due||1e15));
+  const done=EXPR.filter(e=>e.got).sort((a,b)=>b.ts-a.ts);
+  document.getElementById('exCnt').textContent=open.length+' 待取';
+  const row=e=>{
+    let dueHtml='';
+    if(e.due){ const ms=e.due-Date.now(), lv=ms<=0?'red':ms<=3*DAY?'org':'';
+      dueHtml=`<div class="due ${lv}">${ms<=0?`已过期 ${fmtLeft(-ms)}`:`还有 ${fmtLeft(ms)} 到期`}</div>`; }
+    return `<div class="ex ${e.got?'got':''}">
+      <button class="ck" onclick="toggleExpr('${e.id}')" aria-label="标记已取" style="flex:0 0 auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center">
+        <span class="box" style="width:20px;height:20px;border:2px solid ${e.got?'#10B981':'var(--line)'};background:${e.got?'#10B981':'transparent'};border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff">${e.got?ico('check',13,'#fff'):''}</span></button>
+      <div class="bd"><div class="code">${esc(e.code)}</div>
+        <div class="meta">${esc(e.company)}${e.loc?' · '+esc(e.loc):''}${e.note?' · '+esc(e.note):''}</div>${dueHtml}</div>
+      <button class="cp" onclick="copyCode('${esc(e.code)}')">复制</button>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delExpr('${e.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+    </div>`;
+  };
+  document.getElementById('exList').innerHTML =
+    (open.length?open.map(row).join(''):`<div class="empty">没有待取的快递 📦</div>`) +
+    (done.length?`<div style="font-size:11.5px;color:var(--faint);margin-top:11px;padding-top:9px;border-top:1px dashed var(--line)">已取 ${done.length}</div>`+done.slice(0,5).map(row).join(''):'');
+}
+window.addExpr=()=>{
+  const code=document.getElementById('eCode').value.trim();
+  if(!code) return toast('取件码不能为空');
+  const dv=document.getElementById('eDue').value;
+  const due=dv? new Date(dv+'T23:00:00').getTime() : null;
+  EXPR.unshift({id:'x'+Date.now(),company:document.getElementById('eCo').value,code,
+    loc:document.getElementById('eLoc').value.trim(),note:document.getElementById('eNote').value.trim(),due,got:false,ts:Date.now()});
+  if(!saveAll.expr()){ EXPR.shift(); return; }
+  document.getElementById('eCode').value=''; document.getElementById('eLoc').value='';
+  document.getElementById('eDue').value=''; document.getElementById('eNote').value='';
+  renderExpr(); renderTodayBox(); renderUse(); toast('已添加');
+};
+window.toggleExpr=id=>{ const e=EXPR.find(x=>x.id===id); if(!e)return; e.got=!e.got; saveAll.expr(); renderExpr(); renderTodayBox(); if(e.got) toast('已取件 ✅'); };
+window.delExpr=id=>{ askConfirm('删除这条取件码？',()=>{ EXPR=EXPR.filter(x=>x.id!==id); saveAll.expr(); renderExpr(); renderTodayBox(); }); };
+window.copyCode=code=>{
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(()=>toast('取件码已复制'),()=>fallbackCopy(code)); }
+  else fallbackCopy(code);
+};
+function fallbackCopy(t){ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('取件码已复制'); }catch(e){ toast('复制失败，长按选取',true); } document.body.removeChild(ta); }
+
+/* =========================================================
+   22. 习惯打卡（V2-b）：连续天数 + 月历热力图
+   ========================================================= */
+const HCOLORS=['var(--brand)','#10B981','#F59E0B','#EF4444','var(--brand-2)','#0EA5E9'];
+function renderSwatches(){
+  const el=document.getElementById('hSwatches'); if(!el) return;
+  el.innerHTML=HCOLORS.map(c=>
+    `<button type="button" onclick="pickHColor('${c}')" aria-label="选色" style="width:34px;height:34px;margin:0 4px;border-radius:50%;cursor:pointer;background:${c};border:${HCOLOR===c?'3px solid var(--ink)':'2px solid #fff'};box-shadow:0 0 0 1px ${c}"></button>`).join('');
+}
+window.pickHColor=c=>{ HCOLOR=c; renderSwatches(); };
+function isNextDay(a,b){ return (new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))===DAY; }
+function streakOf(h){
+  const days=new Set(h.logs.map(l=>ymd(new Date(l))));
+  const today=ymd(new Date());
+  let cur=0; const d=new Date(); d.setHours(0,0,0,0);
+  if(!days.has(today)) d.setDate(d.getDate()-1);          // 今天没打，从昨天倒推
+  while(days.has(ymd(d))){ cur++; d.setDate(d.getDate()-1); }
+  const sorted=[...days].sort(), best={v:0,run:0,prev:null};
+  for(const s of sorted){ best.run = best.prev&&isNextDay(best.prev,s) ? best.run+1 : 1; best.v=Math.max(best.v,best.run); best.prev=s; }
+  return {cur,best:best.v};
+}
+/* 习惯打卡日历（周/月视图，与日记同款交互） */
+let hbMode='month', hbCur=null;
+function hbCountOf(date){ return HABIT.reduce((s,h)=>s+h.logs.filter(l=>ymd(new Date(l))===date).length,0); }
+function hbCell(date,c,max){
+  const lvl=c===0?0:Math.ceil(c/max*4);
+  const col=lvl===0?'var(--well)':['rgba(249,115,22,.14)','rgba(249,115,22,.38)','rgba(249,115,22,.62)','rgba(249,115,22,.92)'][lvl-1];
+  return `<div class="hcell" style="background:${col};color:${lvl>=3?'#fff':'var(--muted)'};${date===todayYMD()?'border:1.5px solid var(--brand)':''}" title="${date}：${c} 次打卡">${+date.slice(8)}</div>`;
+}
+function renderHeat(){
+  const heat=document.getElementById('heat'); if(!heat) return;
+  if(!hbCur) hbCur=new Date(ymdUTC(todayYMD()));
+  document.getElementById('hbModeBtn').textContent=hbMode==='month'?'周视图':'月视图';
+  const y=hbCur.getUTCFullYear(), m=hbCur.getUTCMonth();
+  let dates=[];
+  if(hbMode==='month'){
+    const days=new Date(Date.UTC(y,m+1,0)).getUTCDate();
+    for(let d=1;d<=days;d++) dates.push(`${y}-${pad(m+1)}-${pad(d)}`);
+    document.getElementById('hbTitle').textContent=`${y}年${m+1}月`;
+  } else {
+    const mon=new Date(hbCur.getTime()); mon.setUTCDate(mon.getUTCDate()-(bjDayOf(hbCur.getTime())||7)+1);
+    const sun=new Date(mon.getTime()+6*DAY);
+    document.getElementById('hbTitle').textContent=`${mon.getUTCFullYear()}.${pad(mon.getUTCMonth()+1)}.${pad(mon.getUTCDate())} – ${pad(sun.getUTCMonth()+1)}.${pad(sun.getUTCDate())}`;
+    for(let i=0;i<7;i++){ const bj=new Date(mon.getTime()+i*DAY+8*3600e3); dates.push(`${bj.getUTCFullYear()}-${pad(bj.getUTCMonth()+1)}-${pad(bj.getUTCDate())}`); }
+  }
+  const counts=dates.map(hbCountOf), max=Math.max(1,...counts);
+  let html=['日','一','二','三','四','五','六'].map(w=>`<div style="text-align:center;font-size:11px;color:var(--faint);padding:2px 0">${w}</div>`).join('');
+  if(hbMode==='month'){
+    const lead=bjDayOf(Date.UTC(y,m,1)-8*3600e3);
+    for(let i=0;i<lead;i++) html+='<div></div>';
+  }
+  dates.forEach((date,i)=>html+=hbCell(date,counts[i],max));
+  heat.innerHTML=html;
+}
+window.hbNav=dir=>{ if(hbMode==='month') hbCur=new Date(Date.UTC(hbCur.getUTCFullYear(), hbCur.getUTCMonth()+dir,1)); else hbCur=new Date(hbCur.getTime()+dir*7*DAY); renderHeat(); };
+window.hbToggleMode=()=>{ hbMode=hbMode==='month'?'week':'month'; renderHeat(); };
+
+function renderHabit(){
+  renderHeat();
+  const list=HABIT.slice().sort((a,b)=>streakOf(b).cur-streakOf(a).cur);
+  document.getElementById('habitList').innerHTML = list.length ? list.map(h=>{
+    const st=streakOf(h), done=h.logs.some(l=>ymd(new Date(l))===ymd(new Date()));
+    const needWk=Array.isArray(h.days)&&h.days.length, isWk=needWk&&h.days.includes(new Date().getDay());
+    return `<div class="habit">
+      <span class="hdot" style="background:${h.color}"></span>
+      <div class="bd"><b>${esc(h.name)}${needWk?' <i class="wbadge">周末</i>':''}</b><span>连续 ${st.cur} 天 · 最佳 ${st.best}${done?' · 今天已打 ✓':''}${needWk&&!isWk?' · 今天不是打卡日':''}</span></div>
+      <button class="ck ${done?'on':''} ${needWk&&!isWk?'off':''}" onclick="toggleHabitToday('${h.id}')" aria-label="打卡" title="${needWk&&!isWk?'只在周末打卡':'打卡'}">
+        <span class="box">${done?ico('check',13,'#fff'):''}</span></button>
+      <button class="iconbtn" style="flex:0 0 32px;width:32px;height:32px" onclick="delHabit('${h.id}')" aria-label="删除">${ico('x',14,'var(--muted)')}</button>
+    </div>`;
+  }).join('') : `<div class="empty">还没有习惯，加一个开始打卡吧</div>`;
+}
+window.addHabit=()=>{
+  const n=document.getElementById('hName').value.trim();
+  if(!n) return toast('习惯名不能为空');
+  HABIT.push({id:'h'+Date.now(),name:n,color:HCOLOR,created:Date.now(),logs:[]});
+  if(!saveAll.habit()){ HABIT.pop(); return; }
+  document.getElementById('hName').value=''; renderHabit(); renderUse(); renderTodayBox(); toast('已添加习惯');
+};
+window.toggleHabitToday=id=>{
+  const h=HABIT.find(x=>x.id===id); if(!h)return;
+  if(Array.isArray(h.days)&&h.days.length&&!h.days.includes(new Date().getDay())) return toast('这个习惯只在周末打卡哦',true);
+  const t=ymd(new Date()), i=h.logs.findIndex(l=>ymd(new Date(l))===t);
+  if(i>=0) h.logs.splice(i,1); else h.logs.push(Date.now());
+  saveAll.habit(); renderHabit(); renderTodayBox(); renderUse();
+};
+window.checkHabitToday=id=>{ // 只打勾，不取消（供 AI「打卡」命令用）
+  const h=HABIT.find(x=>x.id===id); if(!h)return;
+  if(Array.isArray(h.days)&&h.days.length&&!h.days.includes(new Date().getDay())) return toast('这个习惯只在周末打卡哦',true);
+  const t=ymd(new Date());
+  if(!h.logs.some(l=>ymd(new Date(l))===t)){ h.logs.push(Date.now()); saveAll.habit(); renderHabit(); renderTodayBox(); renderUse(); }
+};
+window.delHabit=id=>{ askConfirm('删除这个习惯？打卡记录会一起没。',()=>{ HABIT=HABIT.filter(x=>x.id!==id); saveAll.habit(); renderHabit(); renderTodayBox(); renderUse(); }); };
+
+/* =========================================================
+   20. 面板开关 / 渲染总入口
+   ========================================================= */
+window.togglePanel=(id,btn)=>{
+  ['pWeek','pWx','pSleep','pTime'].forEach(x=>{
+    const el=document.getElementById(x);
+    if(x===id) el.classList.toggle('hide'); else el.classList.add('hide');
+  });
+  ['tbWeek','tbWx','tbSleep','tbClock'].forEach(x=>document.getElementById(x).classList.remove('on'));
+  if(!document.getElementById(id).classList.contains('hide')) btn.classList.add('on');
+};
+/* 分区 tab 切换（记忆上次所在分区） */
+window.switchTab=name=>{
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hide'));
+  const pane=document.getElementById('pane-'+name); if(pane) pane.classList.remove('hide');
+  document.querySelectorAll('#tabs .tab').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
+  save('tab',name);
+  window.scrollTo(0,0);
+};
+function renderAll(){
+  renderWeek(); renderWx(); renderSleep();
+  renderTodayBox(); renderNext(); renderToday(); renderDdl(); renderMat();
+  renderPomo(); renderScore(); renderNote(); renderLater(); renderUse();
+  renderWallet(); renderExpr(); renderHabit(); renderDiary();
+}
+
+/* 静态图标注入 */
+[['i1','book'],['i2','cal'],['i4','clock'],['i6','book'],['i8','target'],['i9','chart'],
+ ['i10','note'],['i12','inbox']].forEach(([id,n])=>{ const e=document.getElementById(id); if(e) e.innerHTML=ico(n,17,'var(--brand)'); });
+['i3','i5','i7','i11','i13'].forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML=ico('chev',16); });
+[['i17','wallet'],['i18','wallet'],['i19','inbox'],['i20','flame']].forEach(([id,n])=>{ const e=document.getElementById(id); if(e) e.innerHTML=ico(n,17,'var(--brand)'); });
+document.getElementById('wMic').innerHTML = ico('mic',15,'var(--brand)') + ' 语音';
+document.querySelector('#topbar .iconbtn').innerHTML=ico('gear',18);
+
+/* 启动 */
+placeOrb(); renderNoise(); renderSwatches(); renderAll(); fetchWx();
+renderClock(); setInterval(renderClock,1000);
+switchTab(load('tab','overview'));   // 恢复上次所在分区（默认概览）
+setTimeout(syncAI,1500);   // 启动后把当前数据同步给本地 ai-bridge（服务没启动则静默跳过）
+cloudInit();               // 已登录 → 启动后自动拉取云端数据（按时间取新）
+if(SET.autoLoc!==false) setTimeout(()=>locateMe(true),1600);   // 打开工作台自动定位当前位置（静默）
+// theme-color 跟随系统深浅色动态切换
+const syncThemeColor=()=>{ const dark=matchMedia('(prefers-color-scheme:dark)').matches; document.querySelector('meta[name=theme-color]').setAttribute('content', dark?'#12100E':'#F97316'); };
+syncThemeColor(); matchMedia('(prefers-color-scheme:dark)').addEventListener('change', syncThemeColor);
+
+// 涟漪（pointerdown delegate；排除日历格子）
+document.addEventListener('pointerdown',e=>{
+  const t=e.target.closest('.btn,.tab,.pill,.ck,details>summary'); if(!t) return;
+  if(t.classList.contains('hcell')||t.classList.contains('wk')) return;
+  const r=t.getBoundingClientRect();
+  const sp=document.createElement('span'); sp.className='ripple';
+  const size=Math.max(r.width,r.height);
+  sp.style.left=(e.clientX-r.left-size/2)+'px';
+  sp.style.top=(e.clientY-r.top-size/2)+'px';
+  sp.style.width=sp.style.height=size+'px';
+  const cs=getComputedStyle(t);
+  if(cs.position==='static') t.style.position='relative';
+  if(cs.overflow!=='hidden') t.style.overflow='hidden';
+  const old=t.querySelectorAll('.ripple'); if(old.length>=3) old[0].remove();
+  t.appendChild(sp); setTimeout(()=>sp.remove(),650);
+});
+// 骨架屏淡出（最小 250ms 防闪烁）
+setTimeout(()=>{ const sk=document.getElementById('skeleton'); if(sk){ sk.classList.add('done'); setTimeout(()=>sk.remove(),260); } }, 250);
+if(PM){ document.getElementById('focusOv').classList.remove('hide'); pmTimer=setInterval(tick,500); }
+setInterval(()=>{ renderNext(); renderTodayBox(); renderDdl(); renderToday(); renderSleep(); },30000);
+setInterval(proactive, 60000);
+setTimeout(()=>{                       // 首次打开的开场白
+  if(!MEM.chat.length){
+    const over=DDL.filter(d=>!d.done&&d.due<Date.now()).length;
+    aiSay(over? `欢迎回来。有 ${over} 个作业已经逾期了，要不先处理这个？点我可以对话。`
+              : '工作台准备好了。点我可以对话，说「今天要干嘛」试试。');
+  } else proactive();
+}, 2600);
+setTimeout(()=>{ if(!load('tipShown',false)){ save('tipShown',true);
+  toast('提示：手机浏览器打开 → 分享 → 添加到主屏幕，就能当 APP 用'); } }, 6000);
+</script>
+</body>
+</html>
